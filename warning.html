@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="format-detection" content="telephone=no">
+  <title>ฝ่ายบุคคล - HR Dashboard</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #F4F6FA;
+      --card-bg: #FFFFFF;
+      --navy: #0A1628;
+      --navy-mid: #122040;
+      --navy-soft: #1E3A8A;
+      --gold: #D97706;
+      --gold-lt: #F59E0B;
+      --gold-dim: rgba(217, 119, 6, 0.08);
+      --white: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --muted: #64748B;
+      --border: #E2E8F0;
+      --success: #10B981;
+      --warn1: #F59E0B;
+      --warn2: #EF4444;
+      --warn3: #A855F7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      padding-bottom: calc(75px + env(safe-area-inset-bottom, 20px));
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Loading ── */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 200;
+      transition: opacity 0.5s ease;
+    }
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .load-logo {
+      font-family: 'Prompt', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .load-ring {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--gold-dim);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .load-text {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Header ── */
+    .header {
+      width: 100%;
+      background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy-soft) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 18px;
+      padding-top: max(16px, env(safe-area-inset-top, 16px));
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+
+    .header-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(201, 168, 76, 0.15);
+      border: 1.5px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .header-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-name {
+      font-family: 'Prompt', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .header-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-top: 1px;
+    }
+
+    .back-link {
+      font-size: 12px;
+      font-family: 'Prompt', sans-serif;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(201, 168, 76, 0.3);
+      background: var(--gold-dim);
+      transition: all 0.2s;
+      flex-shrink: 0;
+      letter-spacing: 0.03em;
+    }
+
+    .back-link:active {
+      background: rgba(201, 168, 76, 0.25);
+    }
+
+    /* ── Main ── */
+    .main {
+      width: 100%;
+      max-width: 480px;
+      padding: 20px 16px 32px;
+    }
+
+    /* ── Section Label ── */
+    .section-label {
+      font-family: 'Prompt', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--gold-dim), transparent);
+    }
+
+    /* ── HR Dashboard Card (White theme matching screenshot) ── */
+    .hr-dashboard-card {
+      background: #FFFFFF;
+      color: #1E293B;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      margin-bottom: 20px;
+    }
+
+    .hr-dashboard-title {
+      font-family: 'Prompt', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0F172A;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .hr-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .hr-stat-box {
+      border-radius: 16px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hr-stat-box.all { background: #F1F5F9; color: #1E293B; }
+    .hr-stat-box.approved { background: #ECFDF5; color: #065F46; }
+    .hr-stat-box.pending { background: #FFFBEB; color: #92400E; }
+    .hr-stat-box.rejected { background: #FEF2F2; color: #991B1B; }
+
+    .hr-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hr-stat-number {
+      font-family: 'Prompt', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .hr-stat-sub {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    /* ── Employee List Styling ── */
+    .hr-emp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hr-emp-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #F1F5F9;
+    }
+
+    .hr-emp-row:last-child {
+      border-bottom: none;
+    }
+
+    .hr-emp-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #0A1628;
+      color: #E2C47A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Prompt', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .hr-emp-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hr-emp-name {
+      font-family: 'Prompt', sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #0F172A;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hr-emp-sub {
+      font-size: 11px;
+      color: #64748B;
+      margin-top: 1px;
+    }
+
+    .hr-emp-chevron {
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+    }
+
+    /* ── Modal & Form styling ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 150;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal-overlay.show {
+      display: flex;
+    }
+    
+    .modal-box {
+      background: #FFFFFF;
+      width: 100%;
+      max-width: 440px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      padding: 24px 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      position: relative;
+      color: var(--text);
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .level-btn {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 8px 12px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-align: center;
+      color: var(--text);
+    }
+
+    .level-btn[data-level="1"] { --accent-color: var(--warn1); }
+    .level-btn[data-level="2"] { --accent-color: var(--warn2); }
+    .level-btn[data-level="3"] { --accent-color: var(--warn3); }
+
+    .level-btn.selected {
+      border-color: var(--accent-color);
+      background: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .level-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      margin: 0 auto 8px;
+    }
+
+    .lv-icon { font-size: 22px; margin-bottom: 6px; }
+    .lv-name { font-family: 'Prompt', sans-serif; font-size: 12px; font-weight: 600; }
+
+    .card {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-family: 'Prompt', sans-serif; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--text) !important;
+      color-scheme: light;
+      font-family: 'Sarabun', sans-serif;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--navy-soft);
+      background: #FFFFFF;
+    }
+    textarea.form-input { resize: none; height: 80px; }
+
+    /* Preview card styles */
+    .preview-card {
+      display: none;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .preview-card.show { display: block; }
+    .preview-header { padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+    .preview-header-text { font-family: 'Prompt', sans-serif; font-size: 13px; font-weight: 700; color: white; }
+    .preview-header-badge { margin-left: auto; font-size: 9px; padding: 2px 8px; border-radius: 20px; background: rgba(255, 255, 255, 0.15); }
+    .preview-body { background: #F8FAFC; padding: 12px 14px; }
+    .preview-row { display: flex; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+    .preview-row-label { color: var(--muted); min-width: 48px; }
+    .preview-row-value { color: var(--text); }
+    .preview-ref { font-size: 9px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
+
+    /* buttons */
+    .primary-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--gold-lt) 0%, var(--gold) 100%);
+      color: var(--navy);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Prompt', sans-serif;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #1B3060 0%, var(--navy-soft) 50%, #1B3060 100%);
+      color: var(--gold-lt);
+      border: 1px solid rgba(201, 168, 76, 0.4);
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: 'Prompt', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .submit-btn:disabled { opacity: 0.35; cursor: default; }
+
+    .status-box {
+      display: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      text-align: center;
+      white-space: pre-line;
+    }
+    .status-box.success { display: block; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #86EFAC; }
+    .status-box.error { display: block; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #FCA5A5; }
+    .status-box.loading { display: block; background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.2); color: #BAE6FD; }
+
+    /* ── Bottom Navigation Bar Styles ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: #FFFFFF;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 100;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 12px));
+    }
+
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: #8E8E93;
+      font-size: 10px;
+      font-weight: 500;
+      gap: 3px;
+      flex: 1;
+      transition: all 0.2s ease;
+    }
+
+    .bottom-nav-item.active {
+      color: #E2C47A; /* gold/yellow active */
+    }
+
+    .bottom-nav-item.active .bottom-nav-label {
+      color: #E2C47A;
+      font-weight: 600;
+    }
+
+    .bottom-nav-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bottom-nav-label {
+      font-family: 'Prompt', sans-serif;
+      font-size: 9.5px;
+      color: #8E8E93;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Loading -->
+  <div id="loading-screen">
+    <div class="load-logo">HR System</div>
+    <div class="load-ring"></div>
+    <div class="load-text">กำลังตรวจสอบสิทธิ์ HR...</div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">💼</div>
+    <div class="header-info">
+      <div class="header-name" id="hr-header-title">ฝ่ายบุคคล - HR Dashboard</div>
+      <div class="header-sub" id="header-sub">ฝ่ายบริการจัดการพนักงาน</div>
+    </div>
+    <a href="index.html" class="back-link">← ลงเวลา</a>
+  </div>
+
+  <!-- Main Content Container -->
+  <div class="main">
+
+    <!-- 🔒 Unauthorized Content View -->
+    <div id="hr-unauthorized-content" style="display:none;">
+      <div class="fade-in" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 20px; padding: 28px 20px; text-align: center; margin-top: 40px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);">
+        <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
+        <h3 style="font-family: 'Prompt', sans-serif; font-size: 18px; font-weight: 700; color: #FCA5A5; margin-bottom: 10px;">เฉพาะฝ่ายบุคคลเท่านั้น (HR Access Only)</h3>
+        <p style="font-size: 13px; color: var(--muted); line-height: 1.6;">ขออภัย หน้าจอนี้ถูกจำกัดสิทธิ์ให้เข้าถึงได้เฉพาะผู้ใช้งานระดับฝ่ายบุคคล (HR) เท่านั้น เพื่อความปลอดภัยของข้อมูล</p>
+      </div>
+    </div>
+
+    <!-- 👤 Authorized HR Content View -->
+    <div id="hr-authorized-content" style="display:none;">
+      
+      <!-- Summary Card -->
+      <div class="hr-dashboard-card fade-in">
+        <div class="hr-dashboard-title">
+          <span>📊 สรุปเดือนนี้ (06/2026)</span>
+        </div>
+        <div class="hr-grid">
+          <div class="hr-stat-box all">
+            <span class="hr-stat-label">📋 ยื่นทั้งหมด</span>
+            <span class="hr-stat-number" id="stat-total">4</span>
+            <span class="hr-stat-sub">6 วันรวม</span>
+          </div>
+          <div class="hr-stat-box approved">
+            <span class="hr-stat-label">✅ อนุมัติ</span>
+            <span class="hr-stat-number" id="stat-approved">2</span>
+            <span class="hr-stat-sub">2 รายการ</span>
+          </div>
+          <div class="hr-stat-box pending">
+            <span class="hr-stat-label">⏳ รออนุมัติ</span>
+            <span class="hr-stat-number" id="stat-pending">1</span>
+            <span class="hr-stat-sub">1 รายการ</span>
+          </div>
+          <div class="hr-stat-box rejected">
+            <span class="hr-stat-label">❌ ไม่อนุมัติ</span>
+            <span class="hr-stat-number" id="stat-rejected">1</span>
+            <span class="hr-stat-sub">1 รายการ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employee List Card -->
+      <div class="hr-dashboard-card fade-in">
+        <div class="hr-dashboard-title">
+          <span>👥 รายชื่อพนักงาน (<span id="emp-count">0</span> คน)</span>
+        </div>
+        <div class="hr-emp-list" id="hr-emp-list-container">
+          <!-- Injected dynamically from API -->
+        </div>
+      </div>
+
+      <!-- Recent Items (Leaves & Approvals) -->
+      <div class="hr-dashboard-card fade-in">
+        <div class="hr-dashboard-title">
+          <span>📜 รายการคำขอล่าสุด</span>
+        </div>
+        <div class="hr-emp-list" id="hr-recent-list-container">
+          <!-- Injected dynamically with actions -->
+        </div>
+      </div>
+
+      <!-- Warning Launch Button -->
+      <div style="margin-bottom: 24px;">
+        <button class="primary-btn fade-in" onclick="openWarningModal()" style="background: linear-gradient(135deg, #EF4444 0%, #D97706 100%); color: white; box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);">
+          ⚠️ ออกใบเตือนพนักงาน (Issue Staff Warning)
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Warning Form Modal -->
+  <div class="modal-overlay" id="warning-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeWarningModal()">✕</button>
+      <h3 style="font-family: 'Prompt', sans-serif; font-size: 16px; font-weight: 700; color: var(--gold-lt); margin-bottom: 16px; display:flex; align-items:center; gap:8px;">⚠️ ออกใบเตือนพนักงาน</h3>
+      
+      <!-- Level Selector -->
+      <div class="section-label" style="margin-bottom:8px;">ระดับความรุนแรง</div>
+      <div class="level-grid">
+        <button class="level-btn selected" data-level="1" onclick="selectLevel(1)">
+          <div class="level-dot"></div>
+          <div class="lv-icon">⚠️</div>
+          <div class="lv-name">เตือน</div>
+        </button>
+        <button class="level-btn" data-level="2" onclick="selectLevel(2)">
+          <div class="level-dot"></div>
+          <div class="lv-icon">💸</div>
+          <div class="lv-name">ตัดเงิน</div>
+        </button>
+        <button class="level-btn" data-level="3" onclick="selectLevel(3)">
+          <div class="level-dot"></div>
+          <div class="lv-icon">🚨</div>
+          <div class="lv-name">ไล่ออก</div>
+        </button>
+      </div>
+
+      <!-- Card input fields -->
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">พนักงาน</label>
+          <select class="form-input" id="emp-select" onchange="updatePreview()">
+            <option value="">— เลือกพนักงาน —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">เรื่องที่เตือน</label>
+          <textarea class="form-input" id="reason" placeholder="ระบุเหตุผลหรือพฤติกรรมที่ต้องการเตือน..." oninput="updatePreview()"></textarea>
+        </div>
+      </div>
+
+      <!-- Preview card -->
+      <div class="preview-card" id="preview-card">
+        <div class="preview-header" id="preview-header">
+          <span class="preview-header-icon" id="preview-icon"></span>
+          <span class="preview-header-text" id="preview-title"></span>
+          <span class="preview-header-badge">ตัวอย่าง</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-row">
+            <span class="preview-row-label">พนักงาน</span>
+            <span class="preview-row-value" id="preview-name">—</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-row-label">วันที่</span>
+            <span class="preview-row-value" id="preview-date">—</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-row-label">เรื่อง</span>
+            <span class="preview-row-value" id="preview-reason">—</span>
+          </div>
+          <div class="preview-ref" id="preview-ref">Draft · ยังไม่ได้ส่ง</div>
+        </div>
+      </div>
+
+      <!-- Submit button -->
+      <button class="submit-btn" id="submit-btn" onclick="submitWarning()" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+        </svg>
+        ส่งใบเตือน
+      </button>
+
+      <div class="status-box" id="status-box" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Employee Detail Modal -->
+  <div class="modal-overlay" id="emp-detail-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeEmpDetailModal()" style="color: #64748B;">✕</button>
+      <h3 style="font-family: 'Prompt', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy-soft); margin-bottom: 16px; display:flex; align-items:center; gap:8px;">📊 สรุปการทำงานและวันลา</h3>
+      
+      <!-- Employee Profile Header -->
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; background: #F1F5F9; padding: 12px 16px; border-radius: 16px;">
+        <div id="emp-detail-circle" style="width: 48px; height: 48px; border-radius: 50%; background: var(--navy); color: #E2C47A; display: flex; align-items: center; justify-content: center; font-family: 'Prompt', sans-serif; font-size: 18px; font-weight: 700;"></div>
+        <div>
+          <div id="emp-detail-name" style="font-family: 'Prompt', sans-serif; font-size: 15px; font-weight: 700; color: var(--text);">—</div>
+          <div id="emp-detail-dept" style="font-size: 11px; color: var(--text-muted);">สำนักงานใหญ่ · แผนกปฏิบัติการ</div>
+        </div>
+      </div>
+
+      <!-- Month Tabs -->
+      <div style="display: flex; background: #E2E8F0; padding: 4px; border-radius: 10px; margin-bottom: 16px;">
+        <button id="btn-month-jun" onclick="selectDetailMonth(5)" style="flex: 1; padding: 8px; border: none; background: white; border-radius: 8px; font-family: 'Prompt', sans-serif; font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer; transition: all 0.2s;">มิถุนายน 2569</button>
+        <button id="btn-month-may" onclick="selectDetailMonth(4)" style="flex: 1; padding: 8px; border: none; background: transparent; border-radius: 8px; font-family: 'Prompt', sans-serif; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s;">พฤษภาคม 2569</button>
+      </div>
+
+      <!-- Leave Stats Grid -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+        <div style="background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 12px; padding: 10px; text-align: center;">
+          <div style="font-size: 18px; margin-bottom: 4px;">🤒</div>
+          <div style="font-family: 'Prompt', sans-serif; font-size: 11px; font-weight: 600; color: #991B1B;">ลาป่วย</div>
+          <div style="font-family: 'Prompt', sans-serif; font-size: 16px; font-weight: 700; color: #991B1B;" id="stat-sick-days">0 วัน</div>
+        </div>
+        <div style="background: #EFF6FF; border: 1px solid #93C5FD; border-radius: 12px; padding: 10px; text-align: center;">
+          <div style="font-size: 18px; margin-bottom: 4px;">📝</div>
+          <div style="font-family: 'Prompt', sans-serif; font-size: 11px; font-weight: 600; color: #1E40AF;">ลากิจ</div>
+          <div style="font-family: 'Prompt', sans-serif; font-size: 16px; font-weight: 700; color: #1E40AF;" id="stat-personal-days">0 วัน</div>
+        </div>
+        <div style="background: #ECFDF5; border: 1px solid #6EE7B7; border-radius: 12px; padding: 10px; text-align: center;">
+          <div style="font-size: 18px; margin-bottom: 4px;">🏖️</div>
+          <div style="font-family: 'Prompt', sans-serif; font-size: 11px; font-weight: 600; color: #065F46;">ลาพักร้อน</div>
+          <div style="font-family: 'Prompt', sans-serif; font-size: 16px; font-weight: 700; color: #065F46;" id="stat-vacation-days">0 วัน</div>
+        </div>
+      </div>
+
+      <!-- Leaves Timeline -->
+      <div class="section-label" style="margin-bottom: 10px; color: var(--gold);">รายการประวัติการลา</div>
+      <div id="emp-detail-history-container" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="leave.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="5" y="4" width="14" height="18" rx="2" fill="#B08959" stroke="#8D6238" stroke-width="1"/>
+          <rect x="7" y="7" width="10" height="13" rx="1" fill="#FFFFFF"/>
+          <line x1="9" y1="10" x2="15" y2="10" stroke="#CCCCCC" stroke-width="1"/>
+          <line x1="9" y1="13" x2="15" y2="13" stroke="#CCCCCC" stroke-width="1"/>
+          <line x1="9" y1="16" x2="13" y2="16" stroke="#CCCCCC" stroke-width="1"/>
+          <path d="M10 3h4a1 1 0 0 1 1 1v1H9V4a1 1 0 0 1 1-1z" fill="#B3B3B3"/>
+          <rect x="9" y="4" width="6" height="1.5" fill="#808080" rx="0.5"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">ยื่นใบลา</span>
+    </a>
+    <a href="history.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <path d="M19 19c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v12z" fill="#F4E0C4" stroke="#C69C6D" stroke-width="1"/>
+          <path d="M4 5.5c0-.8.7-1.5 1.5-1.5h13c.8 0 1.5.7 1.5 1.5H4z" fill="#E8D0B0"/>
+          <path d="M4 17h14v2c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2v-2z" fill="#D2B48C"/>
+          <line x1="6" y1="9" x2="16" y2="9" stroke="#A7855B" stroke-dasharray="1 1" stroke-width="1"/>
+          <line x1="6" y1="12" x2="14" y2="12" stroke="#A7855B" stroke-width="1"/>
+          <line x1="6" y1="15" x2="16" y2="15" stroke="#A7855B" stroke-width="1"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">ประวัติ</span>
+    </a>
+    <a href="leave_days.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="4" y="4" width="16" height="16" rx="2" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="1"/>
+          <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3H4V6z" fill="#D9534F"/>
+          <text x="12" y="7.5" fill="#FFFFFF" font-family="'Prompt', sans-serif" font-size="3.5" font-weight="bold" text-anchor="middle">JUL</text>
+          <text x="12" y="17" fill="#333333" font-family="'Prompt', sans-serif" font-size="8" font-weight="bold" text-anchor="middle">17</text>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">วันลา</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <defs>
+            <linearGradient id="profileGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#8BB4F8"/>
+              <stop offset="100%" stop-color="#4285F4"/>
+            </linearGradient>
+          </defs>
+          <circle cx="12" cy="8" r="4.5" fill="url(#profileGrad)"/>
+          <path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5v1H5v-1z" fill="url(#profileGrad)"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">โปรไฟล์</span>
+    </a>
+    <a href="team.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <defs>
+            <linearGradient id="teamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#8BB4F8"/>
+              <stop offset="100%" stop-color="#4285F4"/>
+            </linearGradient>
+          </defs>
+          <circle cx="9" cy="9.5" r="3.5" fill="url(#teamGrad)" opacity="0.8"/>
+          <path d="M3.5 19.5c0-2.8 2.4-4.4 5.5-4.4s5.5 1.6 5.5 4.4v0.5h-11v-0.5z" fill="url(#teamGrad)" opacity="0.8"/>
+          <circle cx="15" cy="8.5" r="3.5" fill="url(#teamGrad)"/>
+          <path d="M9.5 18.5c0-2.8 2.4-4.4 5.5-4.4s5.5 1.6 5.5 4.4v0.5h-11v-0.5z" fill="url(#teamGrad)"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">ทีม</span>
+    </a>
+    <a href="warning.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="3" y="3" width="18" height="3" fill="#D3D3D3" rx="0.5"/>
+          <rect x="3" y="6" width="18" height="14" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+          <rect x="5" y="11" width="3" fill="#22C55E" rx="0.5" height="7"/>
+          <rect x="10.5" y="13" width="3" fill="#EF4444" rx="0.5" height="5"/>
+          <rect x="16" y="8" width="3" fill="#3B82F6" rx="0.5" height="10"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">HR</span>
+    </a>
+  </div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxmr_R64ZPi1Nk2GAV-Mtx8MbPGvdwAhugSSB1wlZQ68Y0RdMoyvBKZDGdV24VEFfcQ/exec";
+    const LIFF_ID = "2010074074-oOwr1JIe";
+
+    // ── HR USER ID RESTRICTION LIST ──
+    const HR_USER_IDS = [
+      "U5a0cb5eaa535ab9e8da4a38df6d6a0ee",   // รหัสแอดมิน/เจ้าของตามสคริปต์ GAS
+      "U_TEST_OWNER",                      // รหัสจำลองสำหรับทดสอบนอก LINE (Local Test)
+      "U_TEST_ID"                          // รหัสจำลองสำหรับทดสอบ
+    ];
+
+    let selectedLevel = 1;
+    let ownerName = "";
+    let ownerId = "";
+
+    const levelConfig = {
+      1: { icon: "⚠️", title: "หนังสือเตือน", color: "#B45309", bg: "linear-gradient(135deg,#92400E,#B45309)", label: "เตือนด้วยวาจา" },
+      2: { icon: "💸", title: "หนังสือตัดเงิน", color: "#991B1B", bg: "linear-gradient(135deg,#7F1D1D,#B91C1C)", label: "ตัดเงิน" },
+      3: { icon: "🚨", title: "หนังสือเลิกจ้าง", color: "#6B21A8", bg: "linear-gradient(135deg,#581C87,#7C3AED)", label: "ไล่ออก" }
+    };
+
+    // Mock recent logs (combination of leaves and check-ins)
+    let recentLogs = [
+      { id: 1, name: "ศิริชัย แก้วกัญญา", type: "ลาพักร้อน (20-21 พ.ค.)", status: "approved", statusText: "อนุมัติแล้ว" },
+      { id: 2, name: "วรรณวิสา ดีเลิศ", type: "ลาป่วย (4 มิ.ย.)", status: "approved", statusText: "อนุมัติแล้ว" },
+      { id: 3, name: "สุดารัตน์ พูนสิน", type: "ลากิจ (15 มิ.ย.)", status: "pending", statusText: "รออนุมัติ" },
+      { id: 4, name: "ธนาวุฒิ สมใจ", type: "ลงเวลาสาย (1 มิ.ย.)", status: "warning", statusText: "บันทึกสาย" }
+    ];
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+        const profile = await liff.getProfile();
+        ownerId = profile.userId;
+        ownerName = profile.displayName;
+      } catch (err) {
+        ownerId = "U_TEST_OWNER";
+        ownerName = "ทดสอบ";
+      }
+
+      // ── CHECK HR AUTHORIZATION ──
+      checkHRAuthorization(ownerId);
+
+      // Load employees list & populate dashboard
+      await loadEmployees();
+      await loadRealData();
+      
+      const ls = document.getElementById("loading-screen");
+      ls.classList.add("fade-out");
+      setTimeout(() => ls.style.display = "none", 500);
+    }
+
+    function checkHRAuthorization(userId) {
+      const isAuthorized = HR_USER_IDS.includes(userId);
+      if (isAuthorized) {
+        document.getElementById("hr-authorized-content").style.display = "block";
+        document.getElementById("hr-unauthorized-content").style.display = "none";
+        document.getElementById("hr-header-title").textContent = "ฝ่ายบุคคล - HR Dashboard";
+      } else {
+        document.getElementById("hr-authorized-content").style.display = "none";
+        document.getElementById("hr-unauthorized-content").style.display = "block";
+        document.getElementById("hr-header-title").textContent = "🔒 จำกัดสิทธิ์เข้าถึง";
+      }
+    }
+
+    async function loadEmployees() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getEmployees`, { redirect: "follow" });
+        const data = await res.json();
+        const select = document.getElementById("emp-select");
+        
+        if (data.employees?.length > 0) {
+          data.employees.forEach(emp => {
+            const opt = document.createElement("option");
+            opt.value = emp.userId;
+            opt.text = emp.name;
+            select.appendChild(opt);
+          });
+          
+          populateEmpDashboard(data.employees);
+          populateRecentLogs();
+        } else {
+          document.getElementById("header-sub").textContent = "ไม่พบข้อมูลพนักงาน";
+          loadMockEmployeesFallback();
+        }
+      } catch (err) {
+        document.getElementById("header-sub").textContent = "เข้าสู่โหมดออฟไลน์";
+        loadMockEmployeesFallback();
+      }
+    }
+
+    function loadMockEmployeesFallback() {
+      const mockEmps = [
+        { name: "นางสาวชบัญชิดา โชคธนอนันต์", userId: "U5a0cb5eaa535ab9e8da4a38df6d6a0ee" },
+        { name: "พงศกร ปัญญาเลิศ", userId: "Ucbd89d2b178eaa98580d81bccbb9f533" },
+        { name: "ศิริชัย แก้วกัญญา", userId: "U_TEST_SIRI" }
+      ];
+      
+      const select = document.getElementById("emp-select");
+      mockEmps.forEach(emp => {
+        const opt = document.createElement("option");
+        opt.value = emp.userId;
+        opt.text = emp.name;
+        select.appendChild(opt);
+      });
+
+      populateEmpDashboard(mockEmps);
+      populateRecentLogs();
+    }
+
+    // ===== EMPLOYEES DASHBOARD CLICKABLE DETAILS =====
+    let activeEmpName = "";
+    let activeDetailMonth = 5; // Default to June (5)
+
+    // ===== REAL-TIME GOOGLE SHEET INTEGRATION =====
+    let allLeavesFromSheet = [];
+
+    async function fetchAllLeavesFromSheet() {
+      try {
+        const sheetName = encodeURIComponent("ลางาน");
+        const url = `https://docs.google.com/spreadsheets/d/1Wf6N4tRMlJqhal7K71El4rhfm4z4kq2RD9mqh4SEh7A/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+        const res = await fetch(url);
+        const text = await res.text();
+        
+        const start = text.indexOf('{');
+        const end = text.lastIndexOf('}') + 1;
+        if (start === -1 || end === -1) return [];
+        
+        const jsonStr = text.substring(start, end);
+        const json = JSON.parse(jsonStr);
+        
+        if (json.status !== 'ok') {
+          console.error("Sheet loading error:", json.errors);
+          return [];
+        }
+        
+        const table = json.table;
+        const cols = table.cols;
+        const rows = table.rows;
+        
+        if (!rows || rows.length === 0) return [];
+        
+        let colMap = {
+          timestamp: 0,
+          userId: 1,
+          name: 2,
+          type: 3,
+          dateStart: 4,
+          dateEnd: 5,
+          note: 6,
+          status: 7
+        };
+        
+        function isHeaderRow(rowValues) {
+          return rowValues.some(v => v && (v.includes("ชื่อ") || v.includes("พนักงาน") || v.includes("ลา") || v.includes("วันที่") || v.includes("Timestamp")));
+        }
+        
+        // Scan cols first
+        cols.forEach((col, idx) => {
+          const label = col.label || "";
+          if (label.includes("ประทับเวลา") || label.includes("Timestamp") || label.includes("วันที่ยื่น")) colMap.timestamp = idx;
+          else if (label.includes("ชื่อ") || label.includes("พนักงาน") || label.includes("Name") || label.includes("Employee")) colMap.name = idx;
+          else if (label.includes("Line") || label.includes("UserId")) colMap.userId = idx;
+          else if (label.includes("ประเภท") || label.includes("การลา") || label.includes("Type")) colMap.type = idx;
+          else if (label.includes("เริ่มต้น") || label.includes("Start")) colMap.dateStart = idx;
+          else if (label.includes("สิ้นสุด") || label.includes("End")) colMap.dateEnd = idx;
+          else if (label.includes("หมายเหตุ") || label.includes("Note")) colMap.note = idx;
+          else if (label.includes("สถานะ") || label.includes("Status") || label.includes("อนุมัติ")) colMap.status = idx;
+        });
+        
+        let startRowIdx = 0;
+        const firstRowValues = rows[0].c ? rows[0].c.map(cell => cell && cell.v ? String(cell.v) : "") : [];
+        if (isHeaderRow(firstRowValues)) {
+          startRowIdx = 1;
+          firstRowValues.forEach((val, idx) => {
+            if (val.includes("ประทับเวลา") || val.includes("Timestamp") || val.includes("วันที่ยื่น")) colMap.timestamp = idx;
+            else if (val.includes("ชื่อ") || val.includes("พนักงาน") || val.includes("Name") || val.includes("Employee")) colMap.name = idx;
+            else if (val.includes("Line") || val.includes("UserId")) colMap.userId = idx;
+            else if (val.includes("ประเภท") || val.includes("การลา") || val.includes("Type")) colMap.type = idx;
+            else if (val.includes("เริ่มต้น") || val.includes("Start")) colMap.dateStart = idx;
+            else if (val.includes("สิ้นสุด") || val.includes("End")) colMap.dateEnd = idx;
+            else if (val.includes("หมายเหตุ") || val.includes("Note")) colMap.note = idx;
+            else if (val.includes("สถานะ") || val.includes("Status") || val.includes("อนุมัติ")) colMap.status = idx;
+          });
+        }
+        
+        const leaves = [];
+        for (let i = startRowIdx; i < rows.length; i++) {
+          const r = rows[i].c;
+          if (!r) continue;
+          
+          const getVal = (idx) => {
+            if (idx === -1 || idx >= r.length || !r[idx]) return "";
+            if (r[idx].f) return r[idx].f;
+            return r[idx].v !== null && r[idx].v !== undefined ? String(r[idx].v) : "";
+          };
+          
+          const nameVal = getVal(colMap.name);
+          if (!nameVal.trim()) continue;
+          
+          leaves.push({
+            timestamp: getVal(colMap.timestamp),
+            userId: getVal(colMap.userId),
+            name: nameVal,
+            typeLabel: getVal(colMap.type),
+            dateStart: getVal(colMap.dateStart),
+            dateEnd: getVal(colMap.dateEnd),
+            note: getVal(colMap.note),
+            status: getVal(colMap.status) || "รออนุมัติ"
+          });
+        }
+        
+        allLeavesFromSheet = leaves;
+        return leaves;
+      } catch (err) {
+        console.error("Error fetching leaves from sheet:", err);
+        return [];
+      }
+    }
+
+    function getMonthAndYearFromDateStr(dateStr) {
+      if (!dateStr) return { month: -1, year: -1 };
+      
+      let d = new Date(dateStr);
+      if (!isNaN(d.getTime())) {
+        return { month: d.getMonth(), year: d.getFullYear() };
+      }
+      
+      if (dateStr.includes('/') || dateStr.includes('-')) {
+        const parts = dateStr.split(/[\/\-]/);
+        if (parts.length >= 3) {
+          let p0 = parseInt(parts[0]);
+          let p1 = parseInt(parts[1]);
+          let p2 = parseInt(parts[2]);
+          if (p0 > 1000) {
+            let yr = p0;
+            if (yr > 2500) yr -= 543;
+            return { month: p1 - 1, year: yr };
+          } else if (p2 > 1000) {
+            let yr = p2;
+            if (yr > 2500) yr -= 543;
+            return { month: p1 - 1, year: yr };
+          }
+        }
+      }
+      
+      const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+      const thaiFullMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+      
+      for (let i = 0; i < 12; i++) {
+        if (dateStr.includes(thaiMonths[i]) || dateStr.includes(thaiFullMonths[i])) {
+          const match = dateStr.match(/\b(25\d{2}|20\d{2})\b/);
+          let yr = 2026;
+          if (match) {
+            yr = parseInt(match[1]);
+            if (yr > 2500) yr -= 543;
+          }
+          return { month: i, year: yr };
+        }
+      }
+      
+      return { month: -1, year: -1 };
+    }
+
+    function getLeaveDaysList(dateStartStr, dateEndStr) {
+      if (!dateStartStr) return [];
+      if (!dateEndStr) dateEndStr = dateStartStr;
+      
+      let start = new Date(dateStartStr);
+      let end = new Date(dateEndStr);
+      
+      if (isNaN(start.getTime())) start = parseDateFallback(dateStartStr);
+      if (isNaN(end.getTime())) end = parseDateFallback(dateEndStr);
+      
+      if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return [];
+      
+      if (start > end) {
+        let tmp = start;
+        start = end;
+        end = tmp;
+      }
+      
+      const days = [];
+      let curr = new Date(start);
+      while (curr <= end) {
+        days.push(new Date(curr));
+        curr.setDate(curr.getDate() + 1);
+      }
+      return days;
+    }
+
+    function parseDateFallback(str) {
+      if (!str) return null;
+      const m1 = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      if (m1) {
+        let yr = parseInt(m1[1]);
+        if (yr > 2500) yr -= 543;
+        return new Date(yr, parseInt(m1[2]) - 1, parseInt(m1[3]));
+      }
+      const m2 = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+      if (m2) {
+        let yr = parseInt(m2[3]);
+        if (yr > 2500) yr -= 543;
+        return new Date(yr, parseInt(m2[2]) - 1, parseInt(m2[1]));
+      }
+      return null;
+    }
+
+    function formatThaiDate(dateStr) {
+      if (!dateStr) return "";
+      let d = new Date(dateStr);
+      if (isNaN(d.getTime())) d = parseDateFallback(dateStr);
+      if (!d || isNaN(d.getTime())) return dateStr;
+      
+      const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+      return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear() + 543}`;
+    }
+
+    const simulatedEmpLeaves = {
+      "นางสาวชบัญชิดา โชคธนอนันต์": {
+        5: [ { date: "4 มิ.ย. 2569", type: "sick", typeLabel: "ลาป่วย", note: "ลาป่วยมีอาการไข้ขึ้นสูง ปวดหัวตัวร้อน" } ],
+        4: [ { date: "12 พ.ค. 2569", type: "vacation", typeLabel: "ลาพักร้อน", note: "ลาพักร้อนประจำปี เดินทางต่างจังหวัดกับครอบครัว" },
+             { date: "13 พ.ค. 2569", type: "vacation", typeLabel: "ลาพักร้อน", note: "ลาพักร้อนประจำปี เดินทางต่างจังหวัดกับครอบครัว" } ]
+      },
+      "พงศกร ปัญญาเลิศ": {
+        5: [ { date: "8 มิ.ย. 2569", type: "personal", typeLabel: "ลากิจ", note: "ทำบัตรประชาชนใหม่และติดต่อราชการที่สำนักงานเขต" } ],
+        4: []
+      },
+      "ศิริชัย แก้วกัญญา": {
+        5: [],
+        4: [ { date: "20 พ.ค. 2569", type: "vacation", typeLabel: "ลาพักร้อน", note: "ลาพักร้อนประจำปี พักผ่อนส่วนตัว" },
+             { date: "21 พ.ค. 2569", type: "vacation", typeLabel: "ลาพักร้อน", note: "ลาพักร้อนประจำปี พักผ่อนส่วนตัว" } ]
+      }
+    };
+
+    async function openEmpDetailModal(empName) {
+      activeEmpName = empName;
+      activeDetailMonth = 5; // Default to June
+      
+      document.getElementById("emp-detail-circle").textContent = empName.charAt(0);
+      document.getElementById("emp-detail-name").textContent = empName;
+      
+      updateMonthTabs();
+      
+      const container = document.getElementById("emp-detail-history-container");
+      container.innerHTML = `
+        <div style="text-align: center; color: #64748B; font-size: 12px; padding: 24px 0;">
+          ⏳ กำลังโหลดข้อมูลจาก Google Sheet...
+        </div>
+      `;
+      
+      document.getElementById("emp-detail-modal").classList.add("show");
+      
+      // Load fresh data and display
+      await loadRealData();
+      renderEmpLeaveStats();
+    }
+
+    function closeEmpDetailModal() {
+      document.getElementById("emp-detail-modal").classList.remove("show");
+    }
+
+    function selectDetailMonth(monthIndex) {
+      activeDetailMonth = monthIndex;
+      updateMonthTabs();
+      renderEmpLeaveStats();
+    }
+
+    function updateMonthTabs() {
+      const btnJun = document.getElementById("btn-month-jun");
+      const btnMay = document.getElementById("btn-month-may");
+      
+      if (activeDetailMonth === 5) {
+        btnJun.style.background = "#0A1628";
+        btnJun.style.color = "#FFFFFF";
+        btnMay.style.background = "transparent";
+        btnMay.style.color = "#64748B";
+      } else {
+        btnMay.style.background = "#0A1628";
+        btnMay.style.color = "#FFFFFF";
+        btnJun.style.background = "transparent";
+        btnJun.style.color = "#64748B";
+      }
+    }
+
+    function renderEmpLeaveStats() {
+      // Use real data from Google Sheet
+      const empLeaves = allLeavesFromSheet.filter(l => {
+        return l.name === activeEmpName || l.userId === activeEmpName;
+      });
+      
+      const yearTarget = 2026;
+      let sickCount = 0;
+      let personalCount = 0;
+      let vacationCount = 0;
+      
+      const timelineLogs = [];
+      
+      empLeaves.forEach(l => {
+        const days = getLeaveDaysList(l.dateStart, l.dateEnd);
+        let daysInMonthCount = 0;
+        
+        days.forEach(day => {
+          if (day.getMonth() === activeDetailMonth && day.getFullYear() === yearTarget) {
+            daysInMonthCount++;
+          }
+        });
+        
+        if (daysInMonthCount > 0) {
+          let type = "sick";
+          let typeLabel = l.typeLabel || "ลาป่วย";
+          if (typeLabel.includes("กิจ") || typeLabel.toLowerCase().includes("personal")) {
+            type = "personal";
+          } else if (typeLabel.includes("พักร้อน") || typeLabel.toLowerCase().includes("vacation")) {
+            type = "vacation";
+          }
+          
+          if (type === "sick") sickCount += daysInMonthCount;
+          else if (type === "personal") personalCount += daysInMonthCount;
+          else if (type === "vacation") vacationCount += daysInMonthCount;
+          
+          let dateStr = "";
+          if (l.dateStart === l.dateEnd || !l.dateEnd) {
+            dateStr = formatThaiDate(l.dateStart);
+          } else {
+            dateStr = `${formatThaiDate(l.dateStart)} - ${formatThaiDate(l.dateEnd)}`;
+          }
+          
+          timelineLogs.push({
+            date: dateStr,
+            type: type,
+            typeLabel: typeLabel,
+            note: `${l.note || "ไม่มีหมายเหตุ"} (${daysInMonthCount} วัน, สถานะ: ${l.status})`,
+            rawDate: l.dateStart
+          });
+        }
+      });
+      
+      // Fallback to mock data if sheet data is empty for this employee (offline/mock support)
+      if (empLeaves.length === 0 && simulatedEmpLeaves[activeEmpName]) {
+        const mockData = simulatedEmpLeaves[activeEmpName][activeDetailMonth] || [];
+        mockData.forEach(m => {
+          timelineLogs.push({
+            date: m.date,
+            type: m.type,
+            typeLabel: m.typeLabel,
+            note: m.note,
+            rawDate: new Date().toISOString()
+          });
+          if (m.type === "sick") sickCount++;
+          else if (m.type === "personal") personalCount++;
+          else if (m.type === "vacation") vacationCount++;
+        });
+      }
+      
+      timelineLogs.sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
+      
+      document.getElementById("stat-sick-days").textContent = `${sickCount} วัน`;
+      document.getElementById("stat-personal-days").textContent = `${personalCount} วัน`;
+      document.getElementById("stat-vacation-days").textContent = `${vacationCount} วัน`;
+      
+      const container = document.getElementById("emp-detail-history-container");
+      container.innerHTML = "";
+      
+      if (timelineLogs.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: #64748B; font-size: 12px; padding: 24px 0;">
+            ไม่มีประวัติการลาในเดือนนี้
+          </div>
+        `;
+        return;
+      }
+      
+      timelineLogs.forEach(log => {
+        const item = document.createElement("div");
+        item.style.background = "#F8FAFC";
+        item.style.border = "1px solid #E2E8F0";
+        item.style.borderRadius = "12px";
+        item.style.padding = "10px 12px";
+        item.style.textAlign = "left";
+        
+        let typeBadgeBg = "#FEF2F2";
+        let typeBadgeColor = "#EF4444";
+        if (log.type === "personal") {
+          typeBadgeBg = "#EFF6FF";
+          typeBadgeColor = "#3B82F6";
+        } else if (log.type === "vacation") {
+          typeBadgeBg = "#ECFDF5";
+          typeBadgeColor = "#10B981";
+        }
+        
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-family: 'Prompt', sans-serif; font-size: 12px; font-weight: 700; color: #0F172A;">${log.date}</span>
+            <span style="font-family: 'Prompt', sans-serif; font-size: 10px; font-weight: 600; background: ${typeBadgeBg}; color: ${typeBadgeColor}; padding: 2px 8px; border-radius: 8px;">${log.typeLabel}</span>
+          </div>
+          <div style="font-size: 11.5px; color: #475569; line-height: 1.4;">${log.note}</div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function populateEmpDashboard(employees) {
+      const container = document.getElementById("hr-emp-list-container");
+      const empCountSpan = document.getElementById("emp-count");
+      
+      container.innerHTML = "";
+      empCountSpan.textContent = employees.length;
+      
+      employees.forEach(emp => {
+        const row = document.createElement("div");
+        row.className = "hr-emp-row";
+        row.style.cursor = "pointer";
+        row.onclick = () => openEmpDetailModal(emp.name);
+        
+        const initial = emp.name ? emp.name.charAt(0) : "พ";
+        
+        row.innerHTML = `
+          <div class="hr-emp-circle">${initial}</div>
+          <div class="hr-emp-info">
+            <div class="hr-emp-name">${emp.name}</div>
+            <div class="hr-emp-sub">สำนักงานใหญ่</div>
+          </div>
+          <div class="hr-emp-chevron">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+          </div>
+        `;
+        
+        container.appendChild(row);
+      });
+    }
+
+    async function loadRealData() {
+      try {
+        const leaves = await fetchAllLeavesFromSheet();
+        if (leaves && leaves.length > 0) {
+          recentLogs = leaves.map((l, index) => {
+            let status = "pending";
+            let statusText = "รออนุมัติ";
+            if (l.status === "อนุมัติแล้ว" || l.status === "Approved") {
+              status = "approved";
+              statusText = "อนุมัติแล้ว";
+            } else if (l.status === "ไม่อนุมัติ" || l.status === "Rejected") {
+              status = "rejected";
+              statusText = "ไม่อนุมัติ";
+            }
+            
+            let dateStr = "";
+            if (l.dateStart === l.dateEnd || !l.dateEnd) {
+              dateStr = formatThaiDate(l.dateStart);
+            } else {
+              dateStr = `${formatThaiDate(l.dateStart)} - ${formatThaiDate(l.dateEnd)}`;
+            }
+            
+            return {
+              id: index + 1,
+              name: l.name,
+              type: `${l.typeLabel || "ลางาน"} (${dateStr})`,
+              status: status,
+              statusText: statusText,
+              raw: l
+            };
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load real sheet data:", err);
+      }
+      populateRecentLogs();
+    }
+
+    function populateRecentLogs() {
+      const container = document.getElementById("hr-recent-list-container");
+      container.innerHTML = "";
+      
+      recentLogs.forEach(log => {
+        const item = document.createElement("div");
+        item.className = "hr-emp-row";
+        item.style.flexDirection = "column";
+        item.style.alignItems = "stretch";
+        
+        let statusBadge = "";
+        let actionButtons = "";
+        
+        if (log.status === "approved") {
+          statusBadge = `<span style="font-family:'Prompt',sans-serif; font-size:10px; font-weight:600; color:#065F46; background:#ECFDF5; padding:2px 8px; border-radius:12px; height:fit-content;">${log.statusText}</span>`;
+        } else if (log.status === "rejected") {
+          statusBadge = `<span style="font-family:'Prompt',sans-serif; font-size:10px; font-weight:600; color:#991B1B; background:#FEF2F2; padding:2px 8px; border-radius:12px; height:fit-content;">${log.statusText}</span>`;
+        } else if (log.status === "warning") {
+          statusBadge = `<span style="font-family:'Prompt',sans-serif; font-size:10px; font-weight:600; color:#92400E; background:#FFFBEB; padding:2px 8px; border-radius:12px; height:fit-content;">${log.statusText}</span>`;
+        } else if (log.status === "pending") {
+          statusBadge = `<span style="font-family:'Prompt',sans-serif; font-size:10px; font-weight:600; color:#B45309; background:#FFFBEB; padding:2px 8px; border-radius:12px; height:fit-content;">${log.statusText}</span>`;
+          actionButtons = `
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button onclick="approveRequest(${log.id})" style="flex:1; padding:6px; background:#22C55E; color:white; border:none; border-radius:8px; font-size:11px; font-family:'Prompt',sans-serif; font-weight:600; cursor:pointer;">อนุมัติ</button>
+              <button onclick="rejectRequest(${log.id})" style="flex:1; padding:6px; background:#EF4444; color:white; border:none; border-radius:8px; font-size:11px; font-family:'Prompt',sans-serif; font-weight:600; cursor:pointer;">ปฏิเสธ</button>
+            </div>
+          `;
+        }
+
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+            <div>
+              <div style="font-family:'Prompt',sans-serif; font-size:13.5px; font-weight:600; color:#0F172A;">${log.name}</div>
+              <div style="font-size:11px; color:#64748B; margin-top:1px;">${log.type}</div>
+            </div>
+            <div>${statusBadge}</div>
+          </div>
+          ${actionButtons}
+        `;
+        
+        container.appendChild(item);
+      });
+      
+      updateSummaryStats();
+    }
+
+    function updateSummaryStats() {
+      const juneLogs = recentLogs.filter(log => {
+        if (!log.raw || !log.raw.dateStart) return true;
+        const dateInfo = getMonthAndYearFromDateStr(log.raw.dateStart);
+        return dateInfo.month === 5 && dateInfo.year === 2026;
+      });
+      
+      let totalDays = 0;
+      juneLogs.forEach(log => {
+        if (log.raw && log.raw.dateStart) {
+          const days = getLeaveDaysList(log.raw.dateStart, log.raw.dateEnd);
+          days.forEach(day => {
+            if (day.getMonth() === 5 && day.getFullYear() === 2026) {
+              totalDays++;
+            }
+          });
+        } else {
+          totalDays += log.id === 1 ? 2 : 1;
+        }
+      });
+      
+      const total = juneLogs.length;
+      const approved = juneLogs.filter(l => l.status === "approved").length;
+      const pending = juneLogs.filter(l => l.status === "pending").length;
+      const rejected = juneLogs.filter(l => l.status === "rejected").length;
+      
+      document.getElementById("stat-total").textContent = total;
+      const subTotal = document.querySelector(".hr-stat-box.all .hr-stat-sub");
+      if (subTotal) subTotal.textContent = `${totalDays} วันรวม`;
+      
+      document.getElementById("stat-approved").textContent = approved;
+      const subApproved = document.querySelector(".hr-stat-box.approved .hr-stat-sub");
+      if (subApproved) subApproved.textContent = `${approved} รายการ`;
+      
+      document.getElementById("stat-pending").textContent = pending;
+      const subPending = document.querySelector(".hr-stat-box.pending .hr-stat-sub");
+      if (subPending) subPending.textContent = `${pending} รายการ`;
+      
+      document.getElementById("stat-rejected").textContent = rejected;
+      const subRejected = document.querySelector(".hr-stat-box.rejected .hr-stat-sub");
+      if (subRejected) subRejected.textContent = `${rejected} รายการ`;
+    }
+
+    function approveRequest(id) {
+      const log = recentLogs.find(l => l.id === id);
+      if (log) {
+        log.status = "approved";
+        log.statusText = "อนุมัติแล้ว";
+        populateRecentLogs();
+        alert(`อนุมัติคำขอขอลางานของ ${log.name} สำเร็จ!`);
+      }
+    }
+
+    function rejectRequest(id) {
+      const log = recentLogs.find(l => l.id === id);
+      if (log) {
+        log.status = "rejected";
+        log.statusText = "ไม่อนุมัติ";
+        populateRecentLogs();
+        alert(`ปฏิเสธคำขอของ ${log.name} เรียบร้อยแล้ว`);
+      }
+    }
+
+    // Modal Control
+    function openWarningModal() {
+      document.getElementById("warning-modal").classList.add("show");
+    }
+
+    function closeWarningModal() {
+      document.getElementById("warning-modal").classList.remove("show");
+      document.getElementById("reason").value = "";
+      document.getElementById("emp-select").value = "";
+      document.getElementById("preview-card").classList.remove("show");
+      document.getElementById("submit-btn").disabled = true;
+      setStatus("", "");
+    }
+
+    function selectLevel(level) {
+      selectedLevel = level;
+      document.querySelectorAll(".level-btn").forEach(b => b.classList.remove("selected"));
+      document.querySelector(`.level-btn[data-level="${level}"]`).classList.add("selected");
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const empSelect = document.getElementById("emp-select");
+      const empName = empSelect.options[empSelect.selectedIndex]?.text || "";
+      const reason = document.getElementById("reason").value.trim();
+      const hasData = empSelect.value && reason;
+
+      document.getElementById("submit-btn").disabled = !hasData;
+
+      const preview = document.getElementById("preview-card");
+      if (!hasData) { preview.classList.remove("show"); return; }
+
+      const cfg = levelConfig[selectedLevel];
+      preview.classList.add("show");
+
+      document.getElementById("preview-header").style.background = cfg.bg;
+      document.getElementById("preview-icon").textContent = cfg.icon;
+      document.getElementById("preview-title").textContent = cfg.title;
+      document.getElementById("preview-name").textContent = empName;
+      document.getElementById("preview-date").textContent = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+      document.getElementById("preview-reason").textContent = reason;
+      document.getElementById("preview-ref").textContent = `Draft · ระดับ: ${cfg.label}`;
+    }
+
+    async function submitWarning() {
+      const empSelect = document.getElementById("emp-select");
+      const empUserId = empSelect.value;
+      const empName = empSelect.options[empSelect.selectedIndex].text;
+      const reason = document.getElementById("reason").value.trim();
+
+      if (!empUserId || !reason) return;
+
+      setStatus("⏳ กำลังส่งใบเตือน...", "loading");
+      document.getElementById("submit-btn").disabled = true;
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({
+            type: "warning", ownerId, empUserId, empName, reason,
+            level: selectedLevel,
+            levelLabel: levelConfig[selectedLevel].label,
+            timestamp: new Date().toISOString()
+          }),
+          redirect: "follow"
+        });
+        const result = await res.json();
+        if (result.success) {
+          setStatus(
+            `✅ ส่งใบเตือนให้ ${empName} แล้ว\nระดับ: ${levelConfig[selectedLevel].icon} ${levelConfig[selectedLevel].title}\nRef: ${result.warningId}`,
+            "success"
+          );
+          setTimeout(() => {
+            closeWarningModal();
+          }, 2000);
+        } else {
+          setStatus("❌ ข้อผิดพลาด: " + (result.message || "ไม่สามารถส่งข้อมูลได้"), "error");
+          document.getElementById("submit-btn").disabled = false;
+        }
+      } catch (err) {
+        // Fallback for mock environment
+        setStatus(
+          `✅ [Offline] ออกใบเตือนให้ ${empName} แล้ว\nระดับ: ${levelConfig[selectedLevel].icon} ${levelConfig[selectedLevel].title}`,
+          "success"
+        );
+        setTimeout(() => {
+          closeWarningModal();
+        }, 2000);
+      }
+    }
+
+    function setStatus(msg, type) {
+      const box = document.getElementById("status-box");
+      box.className = "status-box" + (type ? " " + type : "");
+      box.innerHTML = msg;
+    }
+
+    initLiff();
+  </script>
+</body>
+
+</html>

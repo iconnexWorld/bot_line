@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="format-detection" content="telephone=no">
+  <meta http-equiv="Permissions-Policy" content="camera=*">
+  <title>ลงเวลาทำงาน</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #F4F6FA;
+      --card-bg: #FFFFFF;
+      --navy: #0A1628;
+      --navy-mid: #122040;
+      --navy-soft: #1E3A8A;
+      --gold: #D97706;
+      --gold-lt: #F59E0B;
+      --gold-dim: rgba(217, 119, 6, 0.08);
+      --white: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --muted: #64748B;
+      --border: #E2E8F0;
+      --glass: rgba(255, 255, 255, 0.8);
+      --success: #10B981;
+      --danger: #EF4444;
+      --info: #3B82F6;
+      --r1: #10B981;
+      --r2: #F59E0B;
+      --r3: #3B82F6;
+      --r4: #EF4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      padding-bottom: calc(75px + env(safe-area-inset-bottom, 20px));
+    }
+
+    /* ── Background Atmosphere ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Loading Screen ── */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 200;
+      transition: opacity 0.5s ease;
+    }
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .load-logo {
+      font-family: 'Prompt', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .load-ring {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--gold-dim);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .load-text {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Header ── */
+    .header {
+      width: 100%;
+      background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy-soft) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 18px;
+      padding-top: max(16px, env(safe-area-inset-top, 16px));
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+
+    .header-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      border: 1.5px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gold);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .header-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .header-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-name {
+      font-family: 'Prompt', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-top: 1px;
+    }
+
+    .header-clock {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .clock-time {
+      font-family: 'Prompt', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    .clock-day {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── Main ── */
+    .main {
+      width: 100%;
+      max-width: 480px;
+      padding: 20px 16px 32px;
+    }
+
+    /* ── Section Label ── */
+    .section-label {
+      font-family: 'Prompt', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--gold-dim), transparent);
+    }
+
+    /* ── Round Grid ── */
+    .round-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .round-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-align: left;
+      color: var(--text);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .round-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: 14px 14px 0 0;
+      background: var(--accent-color, transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .round-btn:active {
+      transform: scale(0.96);
+    }
+
+    .round-btn[data-round="1"] {
+      --accent-color: var(--r1);
+    }
+
+    .round-btn[data-round="2"] {
+      --accent-color: var(--r2);
+    }
+
+    .round-btn[data-round="3"] {
+      --accent-color: var(--r3);
+    }
+
+    .round-btn[data-round="4"] {
+      --accent-color: var(--r4);
+    }
+
+    .round-btn.selected {
+      border-color: var(--accent-color);
+      background: var(--card-bg);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 0 0 1px var(--accent-color) inset;
+    }
+
+    .round-btn.selected::before {
+      opacity: 1;
+    }
+
+    .round-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      margin-bottom: 10px;
+      box-shadow: 0 0 8px var(--accent-color);
+    }
+
+    .round-btn.selected .round-dot {
+      animation: pulse-dot 1.8s ease infinite;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        box-shadow: 0 0 8px var(--accent-color);
+      }
+
+      50% {
+        box-shadow: 0 0 16px var(--accent-color), 0 0 24px var(--accent-color);
+      }
+    }
+
+    .round-name {
+      font-family: 'Prompt', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .round-tag {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .round-btn.selected .round-tag {
+      color: var(--accent-color);
+    }
+
+    /* ── Info Strip ── */
+    .info-strip {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .info-chip {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .info-chip-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .info-chip-value {
+      font-family: 'Prompt', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ── Camera Card ── */
+    .camera-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .camera-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #070D1C;
+      overflow: hidden;
+    }
+
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block;
+    }
+
+    #canvas {
+      display: none;
+    }
+
+    /* corner guides */
+    .cam-guide {
+      position: absolute;
+      inset: 12px;
+      pointer-events: none;
+    }
+
+    .cam-guide::before,
+    .cam-guide::after,
+    .cam-guide span::before,
+    .cam-guide span::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-color: var(--gold);
+      border-style: solid;
+      opacity: 0.6;
+    }
+
+    .cam-guide::before {
+      top: 0;
+      left: 0;
+      border-width: 2px 0 0 2px;
+      border-radius: 3px 0 0 0;
+    }
+
+    .cam-guide::after {
+      top: 0;
+      right: 0;
+      border-width: 2px 2px 0 0;
+      border-radius: 0 3px 0 0;
+    }
+
+    .cam-guide span::before {
+      bottom: 0;
+      left: 0;
+      border-width: 0 0 2px 2px;
+      border-radius: 0 0 0 3px;
+    }
+
+    .cam-guide span::after {
+      bottom: 0;
+      right: 0;
+      border-width: 0 2px 2px 0;
+      border-radius: 0 0 3px 0;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(7, 13, 28, 0.85);
+      backdrop-filter: blur(4px);
+      transition: opacity 0.3s;
+    }
+
+    .camera-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .overlay-icon-wrap {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .overlay-text {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* preview */
+    #preview-wrap {
+      display: none;
+      position: relative;
+    }
+
+    #preview {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      display: block;
+    }
+
+    .preview-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(10, 22, 40, 0.75);
+      color: var(--gold-lt);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(201, 168, 76, 0.3);
+      letter-spacing: 0.04em;
+    }
+
+    .retake-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(10, 22, 40, 0.75);
+      color: var(--white);
+      font-size: 12px;
+      font-family: 'Sarabun', sans-serif;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s;
+    }
+
+    .retake-btn:active {
+      background: rgba(201, 168, 76, 0.15);
+      color: var(--gold-lt);
+    }
+
+    /* capture flash */
+    .flash-overlay {
+      position: absolute;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.05s;
+    }
+
+    .flash-overlay.flash {
+      opacity: 0.7;
+    }
+
+    /* ── Camera Footer ── */
+    .camera-footer {
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      background: rgba(10, 22, 40, 0.6);
+      border-top: 1px solid var(--border);
+    }
+
+    .shutter-btn {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-lt) 0%, var(--gold) 100%);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 0 0 4px rgba(201, 168, 76, 0.15),
+        0 4px 20px rgba(201, 168, 76, 0.35);
+      position: relative;
+    }
+
+    .shutter-btn::after {
+      content: '';
+      position: absolute;
+      inset: 5px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .shutter-btn svg {
+      width: 26px;
+      height: 26px;
+      fill: var(--navy);
+    }
+
+    .shutter-btn:active {
+      transform: scale(0.92);
+      box-shadow: 0 0 0 6px rgba(201, 168, 76, 0.25);
+    }
+
+    .shutter-btn:disabled {
+      background: var(--navy-soft);
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .shutter-btn:disabled::after {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* ── Submit Button ── */
+    .submit-btn {
+      width: 100%;
+      padding: 17px;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 100%);
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Prompt', sans-serif;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 20px rgba(10, 22, 40, 0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.08), transparent);
+      transition: left 0.4s;
+    }
+
+    .submit-btn:not(:disabled):hover::before {
+      left: 100%;
+    }
+
+    .submit-btn:not(:disabled):active {
+      transform: scale(0.99);
+      background-position: right center;
+      border-color: var(--gold);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    /* ── Secondary Buttons ── */
+    .secondary-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--card-bg);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Prompt', sans-serif;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      margin-top: 10px;
+      letter-spacing: 0.02em;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .secondary-btn:active {
+      border-color: rgba(201, 168, 76, 0.4);
+      color: var(--gold-lt);
+      background: var(--gold-dim);
+    }
+
+    /* ── Status Box ── */
+    .status-box {
+      display: none;
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .status-box.success {
+      display: block;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86EFAC;
+    }
+
+    .status-box.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #FCA5A5;
+    }
+
+    .status-box.loading {
+      display: block;
+      background: rgba(96, 165, 250, 0.1);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+      color: #BAE6FD;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 10px;
+    }
+
+    .divider span {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Fade-in Animations ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    .fade-in:nth-child(1) {
+      animation-delay: 0.05s;
+    }
+
+    .fade-in:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .fade-in:nth-child(3) {
+      animation-delay: 0.15s;
+    }
+
+    .fade-in:nth-child(4) {
+      animation-delay: 0.2s;
+    }
+
+    .fade-in:nth-child(5) {
+      animation-delay: 0.25s;
+    }
+
+    .fade-in:nth-child(6) {
+      animation-delay: 0.3s;
+    }
+
+    .fade-in:nth-child(7) {
+      animation-delay: 0.35s;
+    }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 50;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .popup-overlay.show {
+      display: flex;
+    }
+
+    .popup-box {
+      background: white;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 20px 20px 0 0;
+      padding: 24px 20px;
+    }
+
+    .popup-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #E24B4A;
+    }
+
+    .popup-sub {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 16px;
+    }
+
+    .popup-input {
+      width: 100%;
+      padding: 12px;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Sarabun', sans-serif;
+      color: var(--text) !important;
+      color-scheme: light;
+      resize: none;
+      height: 80px;
+      margin-bottom: 12px;
+    }
+
+    .popup-input:focus {
+      outline: none;
+      border-color: #E24B4A;
+    }
+
+    .popup-confirm {
+      width: 100%;
+      padding: 14px;
+      background: #E24B4A;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Sarabun', sans-serif;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    /* ── Bottom Navigation Bar Styles ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: #FFFFFF;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 100;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 12px));
+    }
+
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: #8E8E93;
+      font-size: 10px;
+      font-weight: 500;
+      gap: 3px;
+      flex: 1;
+      transition: all 0.2s ease;
+    }
+
+    .bottom-nav-item:active {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .bottom-nav-item.active {
+      color: #E2C47A; /* gold/yellow active */
+    }
+
+    .bottom-nav-item.active .bottom-nav-label {
+      color: #E2C47A;
+      font-weight: 600;
+    }
+
+    .bottom-nav-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bottom-nav-label {
+      font-family: 'Prompt', sans-serif;
+      font-size: 9.5px;
+      color: #8E8E93;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="load-logo">HR System</div>
+    <div class="load-ring"></div>
+    <div class="load-text">กำลังตรวจสอบตัวตน...</div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-avatar">
+      <img id="profile-pic" src="" alt="" onerror="this.style.display='none'">
+      <span id="profile-initial"></span>
+    </div>
+    <div class="header-info">
+      <div class="header-name" id="profile-name">กำลังโหลด...</div>
+      <div class="header-sub">ระบบลงเวลาทำงาน &nbsp;·&nbsp; Human Resources</div>
+    </div>
+    <div class="header-clock">
+      <div class="clock-time" id="clock-time">--:--</div>
+      <div class="clock-day" id="clock-day">---</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Round Selector -->
+    <div class="section-label fade-in">รอบการลงเวลา</div>
+    <div class="round-grid fade-in">
+      <button class="round-btn selected" data-round="1" onclick="selectRound(1)">
+        <div class="round-dot"></div>
+        <div class="round-name">เข้างาน</div>
+        <div class="round-tag">รอบที่ 1</div>
+      </button>
+      <button class="round-btn" data-round="2" onclick="selectRound(2)">
+        <div class="round-dot"></div>
+        <div class="round-name">พักเที่ยง</div>
+        <div class="round-tag">รอบที่ 2</div>
+      </button>
+      <button class="round-btn" data-round="3" onclick="selectRound(3)">
+        <div class="round-dot"></div>
+        <div class="round-name">กลับจากพัก</div>
+        <div class="round-tag">รอบที่ 3</div>
+      </button>
+      <button class="round-btn" data-round="4" onclick="selectRound(4)">
+        <div class="round-dot"></div>
+        <div class="round-name">เลิกงาน</div>
+        <div class="round-tag">รอบที่ 4</div>
+      </button>
+    </div>
+
+    <!-- Info Strip -->
+    <div class="info-strip fade-in">
+      <div class="info-chip">
+        <div class="info-chip-label">วันที่</div>
+        <div class="info-chip-value" id="display-date">—</div>
+      </div>
+      <div class="info-chip">
+        <div class="info-chip-label">เวลา</div>
+        <div class="info-chip-value" id="display-time">—</div>
+      </div>
+      <div class="info-chip">
+        <div class="info-chip-label">สถานะ</div>
+        <div class="info-chip-value" id="display-status" style="color:var(--muted);font-size:11px">รอถ่ายรูป</div>
+      </div>
+    </div>
+
+    <!-- Camera Card -->
+    <div class="camera-card fade-in">
+      <div class="camera-wrap">
+        <video id="video" autoplay playsinline muted webkit-playsinline></video>
+        <canvas id="canvas"></canvas>
+        <div class="cam-guide"><span></span></div>
+        <div class="flash-overlay" id="flash-overlay"></div>
+        <div class="camera-overlay" id="cam-overlay">
+          <div class="overlay-icon-wrap">📷</div>
+          <div class="overlay-text">กำลังเปิดกล้อง...</div>
+        </div>
+        <div id="preview-wrap">
+          <img id="preview" alt="รูปที่ถ่าย">
+          <div class="preview-badge" id="preview-badge">รอบที่ 1 — เข้างาน</div>
+          <button class="retake-btn" onclick="retake()">↩ ถ่ายใหม่</button>
+        </div>
+      </div>
+      <div class="camera-footer">
+        <button class="shutter-btn" id="shutter-btn" onclick="capture()" title="ถ่ายรูป">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.5-10h-2.08L16 4H8L6.08 5.5H4a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7.5a2 2 0 0 0-2-2Z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button class="submit-btn fade-in" id="submit-btn" onclick="submitAttendance()" disabled>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+      </svg>
+      ยืนยันการลงเวลาเข้างาน
+    </button>
+
+    <!-- Status -->
+    <div class="status-box" id="status-box"></div>
+
+    <!-- Divider -->
+    <div class="divider fade-in"><span>บริการอื่นๆ</span></div>
+
+    <!-- Secondary Actions -->
+    <a href="leave.html" class="secondary-btn fade-in">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.6">
+        <path
+          d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2m0 16H5V8h14z" />
+      </svg>
+      แจ้งลาหยุดงาน
+    </a>
+
+    <a href="warning.html" class="secondary-btn fade-in">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.6">
+        <path d="M1 21h22L12 2zm12-3h-2v-2h2zm0-4h-2v-4h2z" />
+      </svg>
+      แจ้งใบเตือน
+    </a>
+
+  </div>
+
+  <script>
+    // ===== CONFIG =====
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxmr_R64ZPi1Nk2GAV-Mtx8MbPGvdwAhugSSB1wlZQ68Y0RdMoyvBKZDGdV24VEFfcQ/exec";
+    const LIFF_ID = "2010074074-oOwr1JIe";
+
+    // ===== STATE =====
+    let lineUserId = "";
+    let employeeName = "";
+    let selectedRound = 1;
+    let capturedImage = null;
+    let stream = null;
+
+    const roundLabels = ["", "เข้างาน", "พักเที่ยง", "กลับจากพัก", "เลิกงาน"];
+
+    // ===== CLOCK =====
+    function updateClock() {
+      const now = new Date();
+      const opts = { timeZone: "Asia/Bangkok" };
+      const hm = now.toLocaleTimeString("th-TH", { ...opts, hour: "2-digit", minute: "2-digit" });
+      const day = now.toLocaleDateString("th-TH", { ...opts, weekday: "long" });
+      const date = now.toLocaleDateString("th-TH", { ...opts, day: "numeric", month: "short", year: "numeric" });
+      const time = now.toLocaleTimeString("th-TH", { ...opts, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+      document.getElementById("clock-time").textContent = hm;
+      document.getElementById("clock-day").textContent = day;
+      document.getElementById("display-date").textContent = date;
+      document.getElementById("display-time").textContent = time;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ===== LIFF =====
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+
+        const profile = await liff.getProfile();
+        lineUserId = profile.userId;
+        employeeName = profile.displayName;
+
+        document.getElementById("profile-name").textContent = profile.displayName;
+        if (profile.pictureUrl) {
+          const img = document.getElementById("profile-pic");
+          img.src = profile.pictureUrl;
+          img.style.display = "block";
+          document.getElementById("profile-initial").textContent = "";
+        } else {
+          document.getElementById("profile-initial").textContent = profile.displayName.charAt(0);
+        }
+      } catch (err) {
+        lineUserId = "U_TEST_ID";
+        employeeName = "ทดสอบ";
+        document.getElementById("profile-name").textContent = "ทดสอบ (นอก LINE)";
+        document.getElementById("profile-initial").textContent = "ท";
+        console.warn("LIFF error:", err);
+      }
+
+      await startCamera();
+      // Fade out loading screen
+      const ls = document.getElementById("loading-screen");
+      ls.classList.add("fade-out");
+      setTimeout(() => ls.style.display = "none", 500);
+    }
+
+    // ===== CAMERA =====
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "user" }, width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false
+        });
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+        video.onloadedmetadata = () => video.play().catch(e => console.warn("play:", e));
+        document.getElementById("cam-overlay").classList.add("hidden");
+      } catch (err) {
+        const overlay = document.getElementById("cam-overlay");
+        overlay.querySelector(".overlay-icon-wrap").textContent = "⚠️";
+        overlay.querySelector(".overlay-text").textContent = "กรุณาอนุญาตการใช้กล้อง แล้วรีเฟรชหน้านี้";
+        overlay.classList.remove("hidden");
+        console.error("Camera:", err.name, err.message);
+      }
+    }
+
+    // ===== ROUND SELECT =====
+    function selectRound(round) {
+      selectedRound = round;
+      document.querySelectorAll(".round-btn").forEach(b => b.classList.remove("selected"));
+      document.querySelector(`.round-btn[data-round="${round}"]`).classList.add("selected");
+
+      // Update submit label
+      document.getElementById("submit-btn").innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+    </svg>
+    ยืนยันการลงเวลา${roundLabels[round]}
+  `;
+
+      retake();
+    }
+
+    // ===== CAPTURE =====
+    function capture() {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+
+      // Flash
+      const flash = document.getElementById("flash-overlay");
+      flash.classList.add("flash");
+      setTimeout(() => flash.classList.remove("flash"), 150);
+
+      const ctx = canvas.getContext("2d");
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+      // Timestamp overlay
+      const barH = 40;
+      ctx.fillStyle = "rgba(10,22,40,0.75)";
+      ctx.fillRect(0, canvas.height - barH, canvas.width, barH);
+      ctx.fillStyle = "rgba(201,168,76,0.9)";
+      ctx.font = "bold 12px Sarabun, sans-serif";
+      const now = new Date();
+      const label = `${employeeName}  ·  ${now.toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })}  ·  รอบ ${selectedRound}: ${roundLabels[selectedRound]}`;
+      ctx.fillText(label, 10, canvas.height - barH / 2 + 5);
+
+      capturedImage = canvas.toDataURL("image/jpeg", 0.75).split(",")[1];
+
+      // Show preview
+      document.getElementById("preview").src = canvas.toDataURL("image/jpeg", 0.75);
+      document.getElementById("preview-badge").textContent = `รอบที่ ${selectedRound} — ${roundLabels[selectedRound]}`;
+      document.getElementById("preview-wrap").style.display = "block";
+      document.getElementById("video").style.display = "none";
+      document.getElementById("shutter-btn").disabled = true;
+      document.getElementById("submit-btn").disabled = false;
+      document.getElementById("display-status").textContent = "พร้อมส่ง";
+      document.getElementById("display-status").style.color = "var(--success)";
+
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    }
+
+    // ===== RETAKE =====
+    function retake() {
+      capturedImage = null;
+      document.getElementById("preview-wrap").style.display = "none";
+      document.getElementById("video").style.display = "block";
+      document.getElementById("shutter-btn").disabled = false;
+      document.getElementById("submit-btn").disabled = true;
+      document.getElementById("display-status").textContent = "รอถ่ายรูป";
+      document.getElementById("display-status").style.color = "var(--muted)";
+      setStatus("", "");
+      startCamera();
+    }
+
+    // ===== SUBMIT =====
+    async function submitAttendance() {
+      if (!capturedImage) return;
+
+      if (isLate()) {
+        document.getElementById("late-popup-sub").textContent =
+          `คุณเช็คอินหลังเวลา ${LATE_TIME} น. กรุณาระบุเหตุผล`;
+        document.getElementById("late-popup").classList.add("show");
+        return;
+      }
+
+      // ✅ เรียกแค่ sendData() อย่างเดียว
+      sendData("");
+    }
+
+    function setStatus(msg, type) {
+      const box = document.getElementById("status-box");
+      box.className = "status-box" + (type ? " " + type : "");
+      box.textContent = msg;
+    }
+
+    // ===== START =====
+    initLiff();
+
+    // เพิ่มตัวแปร
+    const LATE_TIME = "09:30"; // ต้องตรงกับ GAS CONFIG.LATE_TIME
+
+    function isLate() {
+      if (selectedRound !== 1) return false;
+      const now = new Date();
+      const [h, m] = LATE_TIME.split(":").map(Number);
+      const lateMinutes = h * 60 + m;
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      return nowMinutes > lateMinutes;
+    }
+
+    function confirmLate() {
+      const reason = document.getElementById("late-reason").value.trim();
+      if (!reason) {
+        alert("กรุณากรอกเหตุผลที่มาสายก่อนครับ");
+        return;
+      }
+      document.getElementById("late-popup").classList.remove("show");
+      sendData(reason);
+    }
+
+    function sendData(lateReason) {
+      setStatus("⏳ กำลังส่งข้อมูล...", "loading");
+      document.getElementById("submit-btn").disabled = true;
+
+      const payload = JSON.stringify({
+        lineUserId: lineUserId,
+        employeeName: employeeName,
+        round: selectedRound,
+        imageBase64: capturedImage,
+        timestamp: new Date().toISOString(),
+        lateReason: lateReason
+      });
+
+      fetch(GAS_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: payload
+      })
+        .then(() => {
+          setStatus(
+            "✅ ลงเวลา" + roundLabels[selectedRound] + "สำเร็จ!\nเวลา: " +
+            new Date().toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok" }),
+            "success"
+          );
+          document.getElementById("display-status").textContent = "สำเร็จ ✓";
+          document.getElementById("display-status").style.color = "var(--success)";
+        })
+        .catch(err => {
+          setStatus("❌ ส่งไม่สำเร็จ: " + err.message, "error");
+          document.getElementById("submit-btn").disabled = false;
+        });
+    }
+  </script>
+
+  <!-- Popup กรอกเหตุผลสาย -->
+  <div class="popup-overlay" id="late-popup">
+    <div class="popup-box">
+      <div class="popup-title">⏰ เช็คอินสาย</div>
+      <div class="popup-sub" id="late-popup-sub">คุณเช็คอินหลังเวลา 09:00 น. กรุณาระบุเหตุผล</div>
+      <textarea class="popup-input" id="late-reason" placeholder="กรุณากรอกเหตุผลที่มาสาย..."></textarea>
+      <button class="popup-confirm" onclick="confirmLate()">✅ ยืนยันและส่งข้อมูล</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="leave.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="5" y="4" width="14" height="18" rx="2" fill="#B08959" stroke="#8D6238" stroke-width="1"/>
+          <rect x="7" y="7" width="10" height="13" rx="1" fill="#FFFFFF"/>
+          <line x1="9" y1="10" x2="15" y2="10" stroke="#CCCCCC" stroke-width="1"/>
+          <line x1="9" y1="13" x2="15" y2="13" stroke="#CCCCCC" stroke-width="1"/>
+          <line x1="9" y1="16" x2="13" y2="16" stroke="#CCCCCC" stroke-width="1"/>
+          <path d="M10 3h4a1 1 0 0 1 1 1v1H9V4a1 1 0 0 1 1-1z" fill="#B3B3B3"/>
+          <rect x="9" y="4" width="6" height="1.5" fill="#808080" rx="0.5"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">ยื่นใบลา</span>
+    </a>
+    <a href="history.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <path d="M19 19c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v12z" fill="#F4E0C4" stroke="#C69C6D" stroke-width="1"/>
+          <path d="M4 5.5c0-.8.7-1.5 1.5-1.5h13c.8 0 1.5.7 1.5 1.5H4z" fill="#E8D0B0"/>
+          <path d="M4 17h14v2c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2v-2z" fill="#D2B48C"/>
+          <line x1="6" y1="9" x2="16" y2="9" stroke="#A7855B" stroke-width="1" stroke-dasharray="1 1"/>
+          <line x1="6" y1="12" x2="14" y2="12" stroke="#A7855B" stroke-width="1"/>
+          <line x1="6" y1="15" x2="16" y2="15" stroke="#A7855B" stroke-width="1"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">ประวัติ</span>
+    </a>
+    <a href="leave_days.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="4" y="4" width="16" height="16" rx="2" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="1"/>
+          <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3H4V6z" fill="#D9534F"/>
+          <text x="12" y="7.5" fill="#FFFFFF" font-family="'Prompt', sans-serif" font-size="3.5" font-weight="bold" text-anchor="middle">JUL</text>
+          <text x="12" y="17" fill="#333333" font-family="'Prompt', sans-serif" font-size="8" font-weight="bold" text-anchor="middle">17</text>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">วันลา</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <defs>
+            <linearGradient id="profileGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#8BB4F8"/>
+              <stop offset="100%" stop-color="#4285F4"/>
+            </linearGradient>
+          </defs>
+          <circle cx="12" cy="8" r="4.5" fill="url(#profileGrad)"/>
+          <path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5v1H5v-1z" fill="url(#profileGrad)"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">โปรไฟล์</span>
+    </a>
+    <a href="team.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <defs>
+            <linearGradient id="teamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#8BB4F8"/>
+              <stop offset="100%" stop-color="#4285F4"/>
+            </linearGradient>
+          </defs>
+          <circle cx="9" cy="9.5" r="3.5" fill="url(#teamGrad)" opacity="0.8"/>
+          <path d="M3.5 19.5c0-2.8 2.4-4.4 5.5-4.4s5.5 1.6 5.5 4.4v0.5h-11v-0.5z" fill="url(#teamGrad)" opacity="0.8"/>
+          <circle cx="15" cy="8.5" r="3.5" fill="url(#teamGrad)"/>
+          <path d="M9.5 18.5c0-2.8 2.4-4.4 5.5-4.4s5.5 1.6 5.5 4.4v0.5h-11v-0.5z" fill="url(#teamGrad)"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">ทีม</span>
+    </a>
+    <a href="warning.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="3" y="3" width="18" height="3" fill="#D3D3D3" rx="0.5"/>
+          <rect x="3" y="6" width="18" height="14" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+          <rect x="5" y="11" width="3" fill="#22C55E" rx="0.5" height="7"/>
+          <rect x="10.5" y="13" width="3" fill="#EF4444" rx="0.5" height="5"/>
+          <rect x="16" y="8" width="3" fill="#3B82F6" rx="0.5" height="10"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">HR</span>
+    </a>
+  </div>
+
+</body>
+
+</html>

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="format-detection" content="telephone=no">
+  <title>โปรไฟล์พนักงาน</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #F4F6FA;
+      --card-bg: #FFFFFF;
+      --navy: #0A1628;
+      --navy-mid: #122040;
+      --navy-soft: #1E3A8A;
+      --gold: #D97706;
+      --gold-lt: #F59E0B;
+      --gold-dim: rgba(217, 119, 6, 0.08);
+      --white: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --muted: #64748B;
+      --border: #E2E8F0;
+      --success: #10B981;
+      --info: #3B82F6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      padding-bottom: calc(75px + env(safe-area-inset-bottom, 20px));
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Loading ── */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 200;
+      transition: opacity 0.5s ease;
+    }
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .load-logo {
+      font-family: 'Prompt', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .load-ring {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--gold-dim);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .load-text {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Header ── */
+    .header {
+      width: 100%;
+      background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy-soft) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 18px;
+      padding-top: max(16px, env(safe-area-inset-top, 16px));
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+
+    .header-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      border: 1.5px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gold);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .header-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .header-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-name {
+      font-family: 'Prompt', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-top: 1px;
+    }
+
+    .back-link {
+      font-size: 12px;
+      font-family: 'Prompt', sans-serif;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(201, 168, 76, 0.3);
+      background: var(--gold-dim);
+      transition: all 0.2s;
+      flex-shrink: 0;
+      letter-spacing: 0.03em;
+    }
+
+    .back-link:active {
+      background: rgba(201, 168, 76, 0.25);
+    }
+
+    /* ── Main ── */
+    .main {
+      width: 100%;
+      max-width: 480px;
+      padding: 20px 16px 32px;
+    }
+
+    /* ── Profile Card ── */
+    .profile-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+    }
+
+    .big-avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      border: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--gold);
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(201, 168, 76, 0.15);
+    }
+
+    .big-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-name {
+      font-family: 'Prompt', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .profile-role {
+      font-size: 13px;
+      color: var(--navy-soft);
+      letter-spacing: 0.04em;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .profile-divider {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    .info-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .info-label {
+      color: var(--text-muted);
+    }
+
+    .info-value {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .info-value.copyable {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .info-value.copyable:active {
+      color: var(--gold-lt);
+    }
+
+    /* ── Quick Actions ── */
+    .action-title {
+      font-family: 'Prompt', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--gold-dim), transparent);
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 100%);
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Prompt', sans-serif;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(10, 22, 40, 0.12);
+      text-decoration: none;
+    }
+
+    .primary-btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 10px rgba(201, 168, 76, 0.2);
+    }
+
+    /* ── Bottom Navigation Bar Styles ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: #FFFFFF;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 100;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 12px));
+    }
+
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: #8E8E93;
+      font-size: 10px;
+      font-weight: 500;
+      gap: 3px;
+      flex: 1;
+      transition: all 0.2s ease;
+    }
+
+    .bottom-nav-item:active {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .bottom-nav-item.active {
+      color: #E2C47A; /* gold/yellow active */
+    }
+
+    .bottom-nav-item.active .bottom-nav-label {
+      color: #E2C47A;
+      font-weight: 600;
+    }
+
+    .bottom-nav-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bottom-nav-label {
+      font-family: 'Prompt', sans-serif;
+      font-size: 9.5px;
+      color: #8E8E93;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="load-logo">HR System</div>
+    <div class="load-ring"></div>
+    <div class="load-text">กำลังโหลดโปรไฟล์...</div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-avatar">
+      <img id="header-pic" src="" alt="" onerror="this.style.display='none'">
+      <span id="header-initial"></span>
+    </div>
+    <div class="header-info">
+      <div class="header-name" id="header-name">กำลังโหลด...</div>
+      <div class="header-sub">โปรไฟล์พนักงาน &nbsp;·&nbsp; Staff Profile</div>
+    </div>
+    <a href="index.html" class="back-link">← ลงเวลา</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <div class="profile-card fade-in">
+      <div class="big-avatar">
+        <img id="profile-pic" src="" alt="" onerror="this.style.display='none'">
+        <span id="profile-initial">ท</span>
+      </div>
+      <div class="profile-name" id="profile-display-name">กำลังโหลด...</div>
+      <div class="profile-role">พนักงานทั่วไป (Active)</div>
+
+      <div class="profile-divider"></div>
+
+      <div class="info-list">
+        <div class="info-item">
+          <span class="info-label">ฝ่าย / แผนก</span>
+          <span class="info-value">Human Resources / IT Operations</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">วันที่เริ่มงาน</span>
+          <span class="info-value">1 มกราคม 2568</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">ประเภทพนักงาน</span>
+          <span class="info-value">พนักงานประจำ (Full-Time)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action -->
+    <div class="action-title fade-in">บริการยอดนิยม</div>
+    <a href="index.html" class="primary-btn fade-in">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm3.3 15.3L11 13V7h1.5v5.25l3.5 2.1-.71 1.25.01-.3z"/>
+      </svg>
+      เข้าสู่ระบบลงเวลาทำงาน
+    </a>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="leave.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="5" y="4" width="14" height="18" rx="2" fill="#B08959" stroke="#8D6238" stroke-width="1"/>
+          <rect x="7" y="7" width="10" height="13" rx="1" fill="#FFFFFF"/>
+          <line x1="9" y1="10" x2="15" y2="10" stroke="#CCCCCC" stroke-width="1"/>
+          <line x1="9" y1="13" x2="15" y2="13" stroke="#CCCCCC" stroke-width="1"/>
+          <line x1="9" y1="16" x2="13" y2="16" stroke="#CCCCCC" stroke-width="1"/>
+          <path d="M10 3h4a1 1 0 0 1 1 1v1H9V4a1 1 0 0 1 1-1z" fill="#B3B3B3"/>
+          <rect x="9" y="4" width="6" height="1.5" fill="#808080" rx="0.5"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">ยื่นใบลา</span>
+    </a>
+    <a href="history.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <path d="M19 19c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v12z" fill="#F4E0C4" stroke="#C69C6D" stroke-width="1"/>
+          <path d="M4 5.5c0-.8.7-1.5 1.5-1.5h13c.8 0 1.5.7 1.5 1.5H4z" fill="#E8D0B0"/>
+          <path d="M4 17h14v2c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2v-2z" fill="#D2B48C"/>
+          <line x1="6" y1="9" x2="16" y2="9" stroke="#A7855B" stroke-dasharray="1 1" stroke-width="1"/>
+          <line x1="6" y1="12" x2="14" y2="12" stroke="#A7855B" stroke-width="1"/>
+          <line x1="6" y1="15" x2="16" y2="15" stroke="#A7855B" stroke-width="1"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">ประวัติ</span>
+    </a>
+    <a href="leave_days.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="4" y="4" width="16" height="16" rx="2" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="1"/>
+          <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3H4V6z" fill="#D9534F"/>
+          <text x="12" y="7.5" fill="#FFFFFF" font-family="'Prompt', sans-serif" font-size="3.5" font-weight="bold" text-anchor="middle">JUL</text>
+          <text x="12" y="17" fill="#333333" font-family="'Prompt', sans-serif" font-size="8" font-weight="bold" text-anchor="middle">17</text>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">วันลา</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <defs>
+            <linearGradient id="profileGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#8BB4F8"/>
+              <stop offset="100%" stop-color="#4285F4"/>
+            </linearGradient>
+          </defs>
+          <circle cx="12" cy="8" r="4.5" fill="url(#profileGrad)"/>
+          <path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5v1H5v-1z" fill="url(#profileGrad)"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">โปรไฟล์</span>
+    </a>
+    <a href="team.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <defs>
+            <linearGradient id="teamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#8BB4F8"/>
+              <stop offset="100%" stop-color="#4285F4"/>
+            </linearGradient>
+          </defs>
+          <circle cx="9" cy="9.5" r="3.5" fill="url(#teamGrad)" opacity="0.8"/>
+          <path d="M3.5 19.5c0-2.8 2.4-4.4 5.5-4.4s5.5 1.6 5.5 4.4v0.5h-11v-0.5z" fill="url(#teamGrad)" opacity="0.8"/>
+          <circle cx="15" cy="8.5" r="3.5" fill="url(#teamGrad)"/>
+          <path d="M9.5 18.5c0-2.8 2.4-4.4 5.5-4.4s5.5 1.6 5.5 4.4v0.5h-11v-0.5z" fill="url(#teamGrad)"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">ทีม</span>
+    </a>
+    <a href="warning.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <rect x="3" y="3" width="18" height="3" fill="#D3D3D3" rx="0.5"/>
+          <rect x="3" y="6" width="18" height="14" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+          <rect x="5" y="11" width="3" fill="#22C55E" rx="0.5" height="7"/>
+          <rect x="10.5" y="13" width="3" fill="#EF4444" rx="0.5" height="5"/>
+          <rect x="16" y="8" width="3" fill="#3B82F6" rx="0.5" height="10"/>
+        </svg>
+      </div>
+      <span class="bottom-nav-label">HR</span>
+    </a>
+  </div>
+
+  <script>
+    const LIFF_ID = "2010074074-oOwr1JIe";
+    let lineUserId = "";
+    let employeeName = "";
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+        
+        const profile = await liff.getProfile();
+        lineUserId = profile.userId;
+        employeeName = profile.displayName;
+
+        document.getElementById("header-name").textContent = profile.displayName;
+        document.getElementById("profile-display-name").textContent = profile.displayName;
+        
+        if (profile.pictureUrl) {
+          document.getElementById("header-pic").src = profile.pictureUrl;
+          document.getElementById("header-pic").style.display = "block";
+          document.getElementById("header-initial").textContent = "";
+
+          document.getElementById("profile-pic").src = profile.pictureUrl;
+          document.getElementById("profile-pic").style.display = "block";
+          document.getElementById("profile-initial").textContent = "";
+        } else {
+          document.getElementById("header-initial").textContent = profile.displayName.charAt(0);
+          document.getElementById("profile-initial").textContent = profile.displayName.charAt(0);
+        }
+      } catch (err) {
+        lineUserId = "U_TEST_ID";
+        employeeName = "ทดสอบ";
+        document.getElementById("header-name").textContent = "ทดสอบ (นอก LINE)";
+        document.getElementById("profile-display-name").textContent = "ทดสอบ (นอก LINE)";
+        document.getElementById("header-initial").textContent = "ท";
+        document.getElementById("profile-initial").textContent = "ท";
+      }
+      
+      const ls = document.getElementById("loading-screen");
+      ls.classList.add("fade-out");
+      setTimeout(() => ls.style.display = "none", 500);
+    }
+
+
+
+    initLiff();
+  </script>
+</body>
+
+</html>
