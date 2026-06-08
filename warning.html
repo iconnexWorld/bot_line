@@ -514,7 +514,7 @@
     .status-box.error { display: block; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #FCA5A5; }
     .status-box.loading { display: block; background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.2); color: #BAE6FD; }
 
-    /* ── Bottom Navigation Bar Styles ── */
+   /* — Bottom Navigation Bar Styles (ICONNEX WORLD · Navy + Gold) — */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -522,14 +522,38 @@
       transform: translateX(-50%);
       width: 100%;
       max-width: 480px;
-      background: #FFFFFF;
-      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      background:
+        radial-gradient(180px 90px at 14% 0%, rgba(244, 228, 188, .14), transparent 70%),
+        linear-gradient(135deg, #14245C 0%, #1E3A8A 55%, #2563EB 100%);
+      border-top: 1px solid rgba(244, 228, 188, .22);
       display: flex;
       justify-content: space-around;
-      padding: 8px 0;
+      padding: 10px 0 calc(8px + env(safe-area-inset-bottom, 12px));
       z-index: 100;
-      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
-      padding-bottom: calc(8px + env(safe-area-inset-bottom, 12px));
+      box-shadow: 0 -10px 28px -8px rgba(20, 36, 92, .45);
+      overflow: hidden;
+    }
+
+    .bottom-nav::before {
+      content: '';
+      position: absolute; left: 0; right: 0; top: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #F4E4BC 35%, #C8932B 50%, #F4E4BC 65%, transparent);
+      opacity: .75;
+    }
+
+    .bottom-nav::after {
+      content: '';
+      position: absolute;
+      left: 50%; top: -15px; transform: translateX(-50%);
+      width: 30px; height: 30px; border-radius: 50%;
+      background-color: #14245C;
+      border: 1.5px solid #F4E4BC;
+      box-shadow: 0 6px 16px -4px rgba(20, 36, 92, .55), 0 0 0 4px #EEF3FB;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23F4E4BC' stroke-width='6' stroke-linecap='round'%3E%3Cpath d='M48 16a18 18 0 1 0 0 32'/%3E%3Cpath d='M42 23a10 10 0 1 0 0 18'/%3E%3Cpath d='M37 27a5 5 0 1 0 0 10'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 16px 16px;
+      pointer-events: none;
     }
 
     .bottom-nav-item {
@@ -537,20 +561,27 @@
       flex-direction: column;
       align-items: center;
       text-decoration: none;
-      color: #8E8E93;
+      color: rgba(244, 228, 188, .55);
       font-size: 10px;
       font-weight: 500;
       gap: 3px;
       flex: 1;
       transition: all 0.2s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .bottom-nav-item:active {
+      background: rgba(244, 228, 188, .08);
     }
 
     .bottom-nav-item.active {
-      color: #E2C47A; /* gold/yellow active */
+      color: #F4E4BC;
+      text-shadow: 0 0 14px rgba(244, 228, 188, .45);
     }
 
     .bottom-nav-item.active .bottom-nav-label {
-      color: #E2C47A;
+      color: #F4E4BC;
       font-weight: 600;
     }
 
@@ -565,7 +596,7 @@
     .bottom-nav-label {
       font-family: 'Prompt', sans-serif;
       font-size: 9.5px;
-      color: #8E8E93;
+      color: rgba(244, 228, 188, .55);
     }
 
     .fade-in {
