@@ -1039,7 +1039,7 @@
     async function fetchAllLeavesFromSheet() {
       try {
         const sheetName = encodeURIComponent("ลางาน");
-        const url = `https://docs.google.com/spreadsheets/d/1Wf6N4tRMlJqhal7K71El4rhfm4z4kq2RD9mqh4SEh7A/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+        const url = `https://script.google.com/macros/s/AKfycbwP-RMi_pvH0LiT7f2Btyvkb6P14L1-m9TpKFzHVBw6NHC1PZc9bN6pDaYfzgaYRSBv/gviz/tq?tqx=out:json&sheet=${sheetName}`;
         const res = await fetch(url);
         const text = await res.text();
         
