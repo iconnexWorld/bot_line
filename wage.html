@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="format-detection" content="telephone=no">
+  <title>เงินเดือน/ค่าจ้างของฉัน</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared/nav.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #EEF3FB; --card-bg: #FFFFFF;
+      --navy: #1E3A8A; --navy-deep: #14245C; --navy-mid: #2563EB; --navy-soft: #3B82F6;
+      --gold: #C8932B; --gold-lt: #EFD8A4; --gold-glow: #F4E4BC; --gold-dim: rgba(200, 147, 43, 0.10);
+      --text: #1E2A45; --text-muted: #6B7892; --border: #E1E9F7;
+      --success: #10B981; --danger: #EF4444; --info: #2563EB;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: radial-gradient(900px 360px at 50% -120px, rgba(37, 99, 235, .10), transparent 60%), var(--bg);
+      color: var(--text); min-height: 100vh; min-height: 100dvh;
+      display: flex; flex-direction: column; align-items: center;
+      padding-bottom: calc(94px + env(safe-area-inset-bottom, 20px));
+    }
+    .page { width: 100%; max-width: 480px; padding: 0 16px; }
+
+    .hero {
+      position: relative; margin: 0 -16px 22px; padding: 30px 24px 26px;
+      background: linear-gradient(155deg, var(--navy-deep) 0%, var(--navy) 52%, var(--navy-mid) 100%);
+      border-radius: 0 0 28px 28px; overflow: hidden;
+      box-shadow: 0 14px 36px -12px rgba(20, 36, 92, .45);
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(220px 220px at 88% -10%, rgba(244, 228, 188, .22), transparent 65%),
+                  radial-gradient(260px 200px at -10% 115%, rgba(59, 130, 246, .35), transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold-lt) 35%, var(--gold) 50%, var(--gold-lt) 65%, transparent);
+      opacity: .8;
+    }
+    .hero-eyebrow {
+      position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold-lt); background: rgba(244, 228, 188, .12);
+      border: 1px solid rgba(244, 228, 188, .28); padding: 5px 12px; border-radius: 100px; margin-bottom: 14px;
+    }
+    .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold-lt);
+      box-shadow: 0 0 0 0 rgba(244,228,188,.6); animation: pulse 2.2s ease-out infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(244,228,188,.55); } 70% { box-shadow: 0 0 0 7px rgba(244,228,188,0); } 100% { box-shadow: 0 0 0 0 rgba(244,228,188,0); } }
+    .hero h1 { position: relative; z-index: 1; font-family: 'Prompt', sans-serif; font-size: 25px; font-weight: 700; color: #fff; letter-spacing: .01em; }
+    .hero p { position: relative; z-index: 1; font-size: 13px; color: rgba(255,255,255,.72); margin-top: 7px; line-height: 1.6; max-width: 34ch; }
+    .hero-stats { position: relative; z-index: 1; display: flex; gap: 10px; margin-top: 20px; }
+    .hero-stat { flex: 1; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(6px); border-radius: 14px; padding: 10px 12px; text-align: center; }
+    .hero-stat .num { font-family: 'Prompt', sans-serif; font-size: 17px; font-weight: 700; color: #fff; }
+    .hero-stat .lbl { font-size: 10px; color: rgba(255,255,255,.65); margin-top: 2px; }
+    .hero-stat.accent { background: linear-gradient(135deg, rgba(244,228,188,.22), rgba(244,228,188,.08)); border-color: rgba(244,228,188,.35); }
+    .hero-stat.accent .num { color: var(--gold-lt); }
+
+    .status-box { margin: 0 0 16px; padding: 13px 16px; border-radius: 13px; font-size: 13px; font-weight: 500;
+      background: var(--gold-dim); color: var(--gold); display: none; border: 1px solid rgba(200,147,43,.2); }
+    .status-box.show { display: block; animation: fadeIn .3s ease both; }
+    .status-box.error { background: rgba(239,68,68,.07); color: var(--danger); border-color: rgba(239,68,68,.18); }
+
+    .section-label { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text-muted); margin: 4px 2px 11px; display: flex; align-items: center; gap: 8px; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ---------- Estimate card (สำหรับพนักงานรายวัน) ---------- */
+    .estimate-card {
+      background: var(--card-bg); border-radius: 18px; padding: 18px 18px 16px;
+      border: 1px solid var(--border); box-shadow: 0 4px 18px -8px rgba(20,36,92,.12);
+      margin-bottom: 22px;
+    }
+    .estimate-card h3 { font-family: 'Prompt', sans-serif; font-size: 14.5px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+    .estimate-card .hint { font-size: 11.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; }
+    .estimate-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .estimate-row label { font-size: 12.5px; color: var(--text-muted); flex: none; }
+    .estimate-row input, .estimate-row select {
+      flex: 1; max-width: 160px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);
+      font-family: 'Sarabun', sans-serif; font-size: 13px; color: var(--text); background: var(--bg);
+    }
+    .estimate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .estimate-stat { background: var(--bg); border-radius: 12px; padding: 10px 12px; text-align: center; }
+    .estimate-stat .num { font-family: 'Prompt', sans-serif; font-size: 15px; font-weight: 700; color: var(--navy); }
+    .estimate-stat .lbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .estimate-stat.accent { background: var(--gold-dim); }
+    .estimate-stat.accent .num { color: var(--gold); }
+
+    /* ---------- Payslip cards ---------- */
+    .slip-list { display: flex; flex-direction: column; gap: 14px; }
+    .slip-card {
+      position: relative; background: var(--card-bg); border-radius: 18px; padding: 18px 19px;
+      box-shadow: 0 4px 18px -8px rgba(20, 36, 92, .14); border: 1px solid var(--border);
+      animation: fadeIn .4s cubic-bezier(.22,1,.36,1) both; overflow: hidden;
+    }
+    .slip-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: linear-gradient(180deg, var(--navy-mid), var(--gold-lt)); }
+    .slip-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .slip-period { font-family: 'Prompt', sans-serif; font-weight: 700; font-size: 16px; color: var(--navy); }
+    .slip-type { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .slip-net { text-align: right; }
+    .slip-net .num { font-family: 'Prompt', sans-serif; font-weight: 700; font-size: 18px; color: var(--success); }
+    .slip-net .lbl { font-size: 10px; color: var(--text-muted); }
+    .slip-rows { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 10px; }
+    .slip-row { display: flex; justify-content: space-between; font-size: 12.5px; }
+    .slip-row .lbl { color: var(--text-muted); }
+    .slip-row .val { font-weight: 500; color: var(--text); }
+    .slip-row.deduct .val { color: var(--danger); }
+    .slip-row.add .val { color: var(--success); }
+    .slip-toggle {
+      margin-top: 12px; width: 100%; padding: 9px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--navy); font-family: 'Sarabun', sans-serif; font-size: 12.5px;
+      font-weight: 500; cursor: pointer;
+    }
+    .slip-detail { display: none; margin-top: 10px; }
+    .slip-detail.show { display: flex; flex-direction: column; gap: 6px; animation: fadeIn .25s ease both; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .empty-state { text-align: center; padding: 56px 28px; background: var(--card-bg); border-radius: 20px; border: 1px dashed var(--border); }
+    .empty-state .icon { font-size: 34px; margin: 0 auto 14px; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--gold-dim), rgba(37,99,235,.06)); border-radius: 50%; }
+    .empty-state .title { font-family: 'Prompt', sans-serif; font-weight: 600; font-size: 15px; color: var(--navy); margin-bottom: 5px; }
+    .empty-state .sub { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; }
+
+    .skeleton { display: flex; flex-direction: column; gap: 12px; }
+    .skel-card { height: 120px; border-radius: 18px; border: 1px solid var(--border);
+      background: linear-gradient(90deg, #E7EEF9 25%, #F6F9FE 37%, #E7EEF9 63%);
+      background-size: 400% 100%; animation: shimmer 1.5s ease infinite; }
+    @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="brand-bar">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linecap="round">
+            <path d="M48 16a18 18 0 1 0 0 32"/>
+            <path d="M42 23a10 10 0 1 0 0 18"/>
+            <path d="M37 27a5 5 0 1 0 0 10"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-name">ICONNEX WORLD</span>
+          <span class="brand-tagline">Navigating Global Success</span>
+        </span>
+      </div>
+      <span class="hero-eyebrow"><span class="dot"></span> สลิปเงินเดือน/ค่าจ้าง</span>
+      <h1>💰 เงินเดือน/ค่าจ้างของฉัน</h1>
+      <p>ดูสลิปเงินเดือนหรือค่าจ้างรายวันทุกงวดที่ HR คำนวณแล้ว พร้อมค่าล่วงเวลา โบนัส เงินคืนค่าใช้จ่าย และยอดสุทธิ</p>
+      <div class="hero-stats" id="hero-stats">
+        <div class="hero-stat"><div class="num" id="stat-count">–</div><div class="lbl">งวดที่มีสลิป</div></div>
+        <div class="hero-stat accent"><div class="num" id="stat-latest">–</div><div class="lbl">สุทธิงวดล่าสุด (บาท)</div></div>
+        <div class="hero-stat"><div class="num" id="stat-ytd">–</div><div class="lbl">รวมสุทธิปีนี้ (บาท)</div></div>
+      </div>
+    </header>
+
+    <div class="status-box" id="status-box"></div>
+
+    <div class="estimate-card" id="estimate-card" style="display:none;">
+      <h3>🧮 ประเมินค่าจ้างรายวันล่วงหน้า (โดยประมาณ)</h3>
+      <p class="hint">คำนวณจากเวลาเข้า-ออกงานจริงของคุณในเดือนที่เลือก — ทำงานครบกะ (8 ชม.) ได้ค่าจ้างเต็มอัตรา/วัน,
+        มาไม่ครบกะจ่ายตามสัดส่วนชั่วโมงจริง, ทำเกินกะคิด OT 1.5 เท่าโดยอัตโนมัติ
+        <br><strong>หมายเหตุ:</strong> ยอดนี้เป็นเพียงตัวเลขประมาณการ ยอดจริงจะปรากฏในสลิปเมื่อ HR รันเงินเดือนของงวดนั้นแล้ว</p>
+      <div class="estimate-row">
+        <label>เดือนที่ต้องการดู</label>
+        <input type="month" id="est-month">
+      </div>
+      <div class="estimate-row">
+        <label>อัตราค่าจ้าง/วัน (บาท)</label>
+        <input type="number" id="est-rate" placeholder="เช่น 500" step="1">
+      </div>
+      <button class="slip-toggle" id="est-btn" style="margin-top:4px;">▶ คำนวณค่าจ้างโดยประมาณ</button>
+      <div class="estimate-grid" id="est-result" style="display:none;">
+        <div class="estimate-stat"><div class="num" id="est-days">–</div><div class="lbl">วันทำงาน</div></div>
+        <div class="estimate-stat"><div class="num" id="est-hours">–</div><div class="lbl">ชั่วโมงรวม</div></div>
+        <div class="estimate-stat"><div class="num" id="est-ot">–</div><div class="lbl">ชม. OT</div></div>
+        <div class="estimate-stat accent"><div class="num" id="est-total">–</div><div class="lbl">ค่าจ้างโดยประมาณ (บาท)</div></div>
+      </div>
+    </div>
+
+    <div class="section-label">ประวัติสลิปเงินเดือน/ค่าจ้าง</div>
+
+    <div id="skeleton" class="skeleton">
+      <div class="skel-card"></div>
+      <div class="skel-card"></div>
+    </div>
+
+    <div id="slip-list" class="slip-list" style="display:none;"></div>
+
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div class="icon">🧾</div>
+      <div class="title">ยังไม่มีสลิปเงินเดือน</div>
+      <div class="sub">เมื่อฝ่าย HR รันการคำนวณเงินเดือน/ค่าจ้างของงวดที่มีชื่อคุณแล้ว สลิปจะปรากฏที่นี่โดยอัตโนมัติ</div>
+    </div>
+  </div>
+
+  <div id="bottom-nav"></div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwQv85mi_GvvBbIG-bZ0ah7BYMaMb7tBLPDOrlKxd8fF9dlu3RWL7PjMnJLxjEuyJ2ibA/exec";
+    const LIFF_ID = "2010074074-oOwr1JIe";
+
+    let lineUserId = "";
+    let mySlips = [];
+
+    function setStatus(msg, type) {
+      const box = document.getElementById("status-box");
+      if (!msg) { box.classList.remove("show", "error"); return; }
+      box.textContent = msg;
+      box.className = "status-box show" + (type === "error" ? " error" : "");
+    }
+    function fmtMoney(n) { return Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function _esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+        const profile = await liff.getProfile();
+        lineUserId = profile.userId;
+        const now = new Date();
+        document.getElementById('est-month').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        await loadPayslips();
+      } catch (err) {
+        setStatus("❌ ไม่สามารถเชื่อมต่อ LINE ได้ กรุณาเปิดผ่านแอป LINE", "error");
+        console.error(err);
+      }
+    }
+
+    async function loadPayslips() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getMyPayslips&lineUserId=${encodeURIComponent(lineUserId)}`, { redirect: "follow" });
+        const data = await res.json();
+        mySlips = data.payslips || [];
+        renderStats();
+        render();
+        // ถ้างวดล่าสุดเป็นพนักงานรายวัน ให้แสดงตัวคำนวณค่าจ้างโดยประมาณ
+        if (mySlips.length && mySlips[0].wageType === 'daily') {
+          document.getElementById('estimate-card').style.display = 'block';
+          document.getElementById('est-rate').value = mySlips[0].basePay && mySlips[0].workDays
+            ? Math.round(mySlips[0].basePay / mySlips[0].workDays) : '';
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus("⚠️ โหลดข้อมูลสลิปเงินเดือนไม่สำเร็จ ลองรีเฟรชอีกครั้ง", "error");
+        document.getElementById("skeleton").style.display = "none";
+        document.getElementById("empty-state").style.display = "block";
+      }
+    }
+
+    function renderStats() {
+      document.getElementById('stat-count').textContent = mySlips.length;
+      document.getElementById('stat-latest').textContent = mySlips.length ? fmtMoney(mySlips[0].netPay) : '–';
+      const thisYear = new Date().getFullYear().toString();
+      const ytd = mySlips.filter(s => (s.period || '').startsWith(thisYear)).reduce((sum, s) => sum + (s.netPay || 0), 0);
+      document.getElementById('stat-ytd').textContent = fmtMoney(ytd);
+    }
+
+    function render() {
+      document.getElementById("skeleton").style.display = "none";
+      const list = document.getElementById("slip-list");
+      const empty = document.getElementById("empty-state");
+      if (!mySlips.length) { list.style.display = "none"; empty.style.display = "block"; return; }
+      empty.style.display = "none";
+      list.style.display = "flex";
+      list.innerHTML = mySlips.map((s, i) => `
+        <div class="slip-card" style="animation-delay:${i * 50}ms">
+          <div class="slip-head">
+            <div>
+              <div class="slip-period">งวด ${_esc(s.period)}</div>
+              <div class="slip-type">${s.wageType === 'daily' ? `รายวัน — ทำงาน ${s.workDays} วัน` : 'รายเดือน'} · คำนวณเมื่อ ${_esc(s.computedAt)}</div>
+            </div>
+            <div class="slip-net"><div class="num">${fmtMoney(s.netPay)}</div><div class="lbl">รับสุทธิ (บาท)</div></div>
+          </div>
+          <div class="slip-rows">
+            <div class="slip-row"><span class="lbl">${s.wageType === 'daily' ? 'ค่าจ้างรายวัน' : 'เงินเดือนพื้นฐาน'}</span><span class="val">${fmtMoney(s.basePay)}</span></div>
+            <div class="slip-row add"><span class="lbl">ค่าล่วงเวลา (OT ${s.otHours} ชม.)</span><span class="val">+${fmtMoney(s.otPay)}</span></div>
+          </div>
+          <button class="slip-toggle" data-idx="${i}">▾ ดูรายละเอียดเพิ่มเติม</button>
+          <div class="slip-detail" id="slip-detail-${i}">
+            <div class="slip-row add"><span class="lbl">โบนัส/คอมมิชชั่น/เงินจูงใจ</span><span class="val">+${fmtMoney(s.bonus)}</span></div>
+            <div class="slip-row add"><span class="lbl">เงินคืนค่าใช้จ่าย (ไม่คิดภาษี)</span><span class="val">+${fmtMoney(s.expenseReimbursement)}</span></div>
+            <div class="slip-row"><span class="lbl">รวมรายรับ (Gross)</span><span class="val">${fmtMoney(s.gross)}</span></div>
+            <div class="slip-row deduct"><span class="lbl">ประกันสังคม</span><span class="val">−${fmtMoney(s.socialSecurity)}</span></div>
+            <div class="slip-row deduct"><span class="lbl">ภาษีหัก ณ ที่จ่าย</span><span class="val">−${fmtMoney(s.tax)}</span></div>
+            <div class="slip-row deduct"><span class="lbl">รายการหักอื่น ๆ</span><span class="val">−${fmtMoney(s.otherDeductions)}</span></div>
+            <div class="slip-row deduct"><span class="lbl">หักรวมทั้งหมด</span><span class="val">−${fmtMoney(s.deductions)}</span></div>
+          </div>
+        </div>
+      `).join("");
+
+      list.querySelectorAll('.slip-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = btn.dataset.idx;
+          const detail = document.getElementById(`slip-detail-${idx}`);
+          const showing = detail.classList.toggle('show');
+          btn.textContent = showing ? '▴ ซ่อนรายละเอียด' : '▾ ดูรายละเอียดเพิ่มเติม';
+        });
+      });
+    }
+
+    document.getElementById('est-btn').addEventListener('click', async () => {
+      const month = document.getElementById('est-month').value;
+      const rate = document.getElementById('est-rate').value;
+      if (!month || !rate) { setStatus('กรุณาเลือกเดือนและกรอกอัตราค่าจ้าง/วัน', 'error'); return; }
+      setStatus('');
+      try {
+        const res = await fetch(`${GAS_URL}?action=estimateMyDailyWage&lineUserId=${encodeURIComponent(lineUserId)}&month=${month}&dailyRate=${encodeURIComponent(rate)}`, { redirect: 'follow' });
+        const data = await res.json();
+        if (data.error) { setStatus('⚠️ ' + data.error, 'error'); return; }
+        document.getElementById('est-days').textContent = data.workDays ?? '–';
+        document.getElementById('est-hours').textContent = data.totalHours ?? '–';
+        document.getElementById('est-ot').textContent = data.otHours ?? '–';
+        document.getElementById('est-total').textContent = fmtMoney(data.estimatedTotal);
+        document.getElementById('est-result').style.display = 'grid';
+      } catch (err) {
+        console.error(err);
+        setStatus('⚠️ คำนวณไม่สำเร็จ ลองอีกครั้ง', 'error');
+      }
+    });
+
+    initLiff();
+  </script>
+  <script src="shared/nav.js"></script>
+</body>
+</html>

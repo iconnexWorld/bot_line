@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="format-detection" content="telephone=no">
+  <title>เบิกค่าใช้จ่าย</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared/nav.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #EEF3FB; --card-bg: #FFFFFF;
+      --navy: #1E3A8A; --navy-deep: #14245C; --navy-mid: #2563EB; --navy-soft: #3B82F6;
+      --gold: #C8932B; --gold-lt: #EFD8A4; --gold-glow: #F4E4BC; --gold-dim: rgba(200, 147, 43, 0.10);
+      --text: #1E2A45; --text-muted: #6B7892; --border: #E1E9F7;
+      --success: #10B981; --danger: #EF4444; --info: #2563EB; --warn: #F59E0B;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: radial-gradient(900px 360px at 50% -120px, rgba(37, 99, 235, .10), transparent 60%), var(--bg);
+      color: var(--text); min-height: 100vh; min-height: 100dvh;
+      display: flex; flex-direction: column; align-items: center;
+      padding-bottom: calc(94px + env(safe-area-inset-bottom, 20px));
+    }
+    .page { width: 100%; max-width: 480px; padding: 0 16px; }
+
+    .hero {
+      position: relative; margin: 0 -16px 22px; padding: 30px 24px 26px;
+      background: linear-gradient(155deg, var(--navy-deep) 0%, var(--navy) 52%, var(--navy-mid) 100%);
+      border-radius: 0 0 28px 28px; overflow: hidden;
+      box-shadow: 0 14px 36px -12px rgba(20, 36, 92, .45);
+    }
+    .hero::before { content: ''; position: absolute; inset: 0;
+      background: radial-gradient(220px 220px at 88% -10%, rgba(244, 228, 188, .22), transparent 65%),
+                  radial-gradient(260px 200px at -10% 115%, rgba(59, 130, 246, .35), transparent 70%);
+      pointer-events: none; }
+    .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold-lt) 35%, var(--gold) 50%, var(--gold-lt) 65%, transparent); opacity: .8; }
+    .hero-eyebrow { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-lt);
+      background: rgba(244, 228, 188, .12); border: 1px solid rgba(244, 228, 188, .28); padding: 5px 12px; border-radius: 100px; margin-bottom: 14px; }
+    .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold-lt);
+      box-shadow: 0 0 0 0 rgba(244,228,188,.6); animation: pulse 2.2s ease-out infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(244,228,188,.55); } 70% { box-shadow: 0 0 0 7px rgba(244,228,188,0); } 100% { box-shadow: 0 0 0 0 rgba(244,228,188,0); } }
+    .hero h1 { position: relative; z-index: 1; font-family: 'Prompt', sans-serif; font-size: 25px; font-weight: 700; color: #fff; }
+    .hero p { position: relative; z-index: 1; font-size: 13px; color: rgba(255,255,255,.72); margin-top: 7px; line-height: 1.6; max-width: 34ch; }
+    .hero-stats { position: relative; z-index: 1; display: flex; gap: 10px; margin-top: 20px; }
+    .hero-stat { flex: 1; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(6px); border-radius: 14px; padding: 10px 12px; text-align: center; }
+    .hero-stat .num { font-family: 'Prompt', sans-serif; font-size: 17px; font-weight: 700; color: #fff; }
+    .hero-stat .lbl { font-size: 10px; color: rgba(255,255,255,.65); margin-top: 2px; }
+    .hero-stat.accent { background: linear-gradient(135deg, rgba(244,228,188,.22), rgba(244,228,188,.08)); border-color: rgba(244,228,188,.35); }
+    .hero-stat.accent .num { color: var(--gold-lt); }
+
+    .status-box { margin: 0 0 16px; padding: 13px 16px; border-radius: 13px; font-size: 13px; font-weight: 500;
+      background: var(--gold-dim); color: var(--gold); display: none; border: 1px solid rgba(200,147,43,.2); }
+    .status-box.show { display: block; animation: fadeIn .3s ease both; }
+    .status-box.error { background: rgba(239,68,68,.07); color: var(--danger); border-color: rgba(239,68,68,.18); }
+    .status-box.success { background: rgba(16,185,129,.08); color: var(--success); border-color: rgba(16,185,129,.2); }
+
+    .section-label { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text-muted); margin: 26px 2px 11px; display: flex; align-items: center; gap: 8px; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ---------- Form card ---------- */
+    .form-card { background: var(--card-bg); border-radius: 18px; padding: 18px; border: 1px solid var(--border);
+      box-shadow: 0 4px 18px -8px rgba(20,36,92,.12); }
+    .form-card h3 { font-family: 'Prompt', sans-serif; font-size: 14.5px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+    .hint { font-size: 11.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; }
+    .field { margin-bottom: 13px; }
+    .field label { display: block; font-size: 12.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 10px 13px; border-radius: 11px; border: 1px solid var(--border);
+      font-family: 'Sarabun', sans-serif; font-size: 13.5px; color: var(--text); background: var(--bg);
+      resize: vertical;
+    }
+    .limit-note { font-size: 11px; color: var(--info); margin-top: 5px; padding: 7px 11px; border-radius: 9px;
+      background: rgba(37,99,235,.06); border: 1px solid rgba(37,99,235,.12); display: none; }
+    .limit-note.show { display: block; }
+    .submit-btn {
+      width: 100%; margin-top: 6px; padding: 13px; border: none; border-radius: 13px;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%); color: #fff;
+      font-family: 'Prompt', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 8px 22px -8px rgba(37,99,235,.55); transition: transform .15s ease;
+    }
+    .submit-btn:active { transform: scale(.98); }
+    .submit-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ---------- Stats / filter ---------- */
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-chip { flex: none; padding: 8px 17px; border-radius: 100px; font-size: 12.5px; font-weight: 500;
+      border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted);
+      cursor: pointer; transition: all .18s cubic-bezier(.4,0,.2,1); white-space: nowrap; box-shadow: 0 1px 2px rgba(20,36,92,.04); }
+    .filter-chip.active { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%); color: #fff; border-color: var(--navy);
+      box-shadow: 0 6px 16px -6px rgba(37, 99, 235, .55); }
+
+    /* ---------- Expense cards ---------- */
+    .exp-list { display: flex; flex-direction: column; gap: 12px; }
+    .exp-card { position: relative; background: var(--card-bg); border-radius: 16px; padding: 15px 17px;
+      display: flex; gap: 13px; align-items: flex-start; box-shadow: 0 4px 18px -8px rgba(20, 36, 92, .14);
+      border: 1px solid var(--border); animation: fadeIn .4s cubic-bezier(.22,1,.36,1) both; overflow: hidden; }
+    .exp-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); }
+    .exp-card.st-approved::before, .exp-card.st-paid::before { background: linear-gradient(180deg, var(--success), #34D399); }
+    .exp-card.st-pending::before { background: linear-gradient(180deg, var(--warn), #FBBF24); }
+    .exp-card.st-rejected::before { background: linear-gradient(180deg, var(--danger), #F87171); }
+    .exp-icon { font-size: 20px; line-height: 1; flex: none; width: 42px; height: 42px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(145deg, var(--gold-dim), rgba(37,99,235,.05)); border: 1px solid rgba(200, 147, 43, .15); }
+    .exp-body { flex: 1; min-width: 0; }
+    .exp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .exp-cat { font-family: 'Prompt', sans-serif; font-weight: 600; font-size: 14px; color: var(--text); }
+    .exp-amount { font-family: 'Prompt', sans-serif; font-weight: 700; font-size: 15px; color: var(--navy); white-space: nowrap; }
+    .exp-desc { font-size: 12px; color: var(--text-muted); margin-top: 3px; line-height: 1.55; }
+    .exp-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+    .pill { font-size: 10.5px; padding: 3px 10px; border-radius: 100px; font-weight: 500; }
+    .pill.st-approved, .pill.st-paid { background: rgba(16,185,129,.12); color: var(--success); }
+    .pill.st-pending { background: rgba(245,158,11,.14); color: #B45309; }
+    .pill.st-rejected { background: rgba(239,68,68,.12); color: var(--danger); }
+    .pill.date { background: var(--bg); color: var(--text-muted); }
+    .exp-note { font-size: 11px; color: var(--text-muted); margin-top: 7px; padding: 7px 10px; border-radius: 9px; background: var(--bg); line-height: 1.6; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .empty-state { text-align: center; padding: 50px 28px; background: var(--card-bg); border-radius: 20px; border: 1px dashed var(--border); }
+    .empty-state .icon { font-size: 32px; margin: 0 auto 12px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--gold-dim), rgba(37,99,235,.06)); border-radius: 50%; }
+    .empty-state .title { font-family: 'Prompt', sans-serif; font-weight: 600; font-size: 14.5px; color: var(--navy); margin-bottom: 5px; }
+    .empty-state .sub { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="brand-bar">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linecap="round">
+            <path d="M48 16a18 18 0 1 0 0 32"/>
+            <path d="M42 23a10 10 0 1 0 0 18"/>
+            <path d="M37 27a5 5 0 1 0 0 10"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-name">ICONNEX WORLD</span>
+          <span class="brand-tagline">Navigating Global Success</span>
+        </span>
+      </div>
+      <span class="hero-eyebrow"><span class="dot"></span> เบิกค่าใช้จ่าย/ค่าน้ำมัน/สำรองจ่าย</span>
+      <h1>🧾 เบิกค่าใช้จ่ายของฉัน</h1>
+      <p>ส่งคำขอเบิกค่าใช้จ่ายที่สำรองจ่ายไปก่อน เช่น ค่าน้ำมัน ค่าเดินทาง หรือเงินสำรองจ่าย —
+        ระบบจะตรวจสอบและอนุมัติอัตโนมัติทันทีหากอยู่ในวงเงินที่กำหนด</p>
+      <div class="hero-stats" id="hero-stats">
+        <div class="hero-stat"><div class="num" id="stat-total">–</div><div class="lbl">คำขอทั้งหมด</div></div>
+        <div class="hero-stat accent"><div class="num" id="stat-pending">–</div><div class="lbl">รอพิจารณา</div></div>
+        <div class="hero-stat"><div class="num" id="stat-amount">–</div><div class="lbl">ยอดอนุมัติสะสม (บาท)</div></div>
+      </div>
+    </header>
+
+    <div class="status-box" id="status-box"></div>
+
+    <div class="form-card">
+      <h3>📤 ส่งคำขอเบิกใหม่</h3>
+      <p class="hint">กรอกรายละเอียดให้ครบถ้วน แนบรูปใบเสร็จ (ถ้ามี) เพื่อความรวดเร็วในการพิจารณา</p>
+      <div class="field">
+        <label>ประเภทค่าใช้จ่าย</label>
+        <select id="f-category"></select>
+        <div class="limit-note" id="limit-note"></div>
+      </div>
+      <div class="field">
+        <label>จำนวนเงิน (บาท)</label>
+        <input type="number" id="f-amount" step="0.01" placeholder="เช่น 450">
+      </div>
+      <div class="field">
+        <label>วันที่จ่ายจริง</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="field">
+        <label>รายละเอียด</label>
+        <textarea id="f-desc" rows="2" placeholder="เช่น เติมน้ำมันรถไปพบลูกค้าโซนตะวันออก"></textarea>
+      </div>
+      <div class="field">
+        <label>แนบรูปใบเสร็จ (ถ้ามี)</label>
+        <input type="file" id="f-receipt" accept="image/*" capture="environment">
+      </div>
+      <button class="submit-btn" id="submit-btn">📨 ส่งคำขอเบิกค่าใช้จ่าย</button>
+    </div>
+
+    <div class="section-label">ประวัติคำขอของฉัน</div>
+
+    <div class="filter-row" id="filter-row">
+      <button class="filter-chip active" data-filter="all">ทั้งหมด</button>
+      <button class="filter-chip" data-filter="approved">อนุมัติแล้ว</button>
+      <button class="filter-chip" data-filter="pending">รอพิจารณา</button>
+      <button class="filter-chip" data-filter="paid">จ่ายแล้ว</button>
+      <button class="filter-chip" data-filter="rejected">ไม่อนุมัติ</button>
+    </div>
+
+    <div id="exp-list" class="exp-list" style="display:none;"></div>
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div class="icon">📭</div>
+      <div class="title">ยังไม่มีคำขอเบิกค่าใช้จ่าย</div>
+      <div class="sub">เมื่อคุณส่งคำขอเบิก รายการจะปรากฏที่นี่พร้อมสถานะการพิจารณาแบบเรียลไทม์</div>
+    </div>
+  </div>
+
+  <div id="bottom-nav"></div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwQv85mi_GvvBbIG-bZ0ah7BYMaMb7tBLPDOrlKxd8fF9dlu3RWL7PjMnJLxjEuyJ2ibA/exec";
+    const LIFF_ID = "2010074074-oOwr1JIe";
+
+    let lineUserId = "", employeeName = "";
+    let myExpenses = [];
+    let categories = {}, limits = {};
+    let currentFilter = "all";
+
+    const STATUS_LABELS = { approved: 'อนุมัติแล้ว', pending: 'รอพิจารณา', rejected: 'ไม่อนุมัติ', paid: 'จ่ายแล้ว' };
+    const CATEGORY_ICONS = { fuel: '⛽', travel: '🧳', supplies: '🧰', advance: '💵', other: '🧾' };
+
+    function setStatus(msg, type) {
+      const box = document.getElementById("status-box");
+      if (!msg) { box.classList.remove("show", "error", "success"); return; }
+      box.textContent = msg;
+      box.className = "status-box show" + (type ? " " + type : "");
+    }
+    function fmtMoney(n) { return Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function _esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+        const profile = await liff.getProfile();
+        lineUserId = profile.userId;
+        employeeName = profile.displayName || '';
+        document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+        await loadCategories();
+        await loadExpenses();
+      } catch (err) {
+        setStatus("❌ ไม่สามารถเชื่อมต่อ LINE ได้ กรุณาเปิดผ่านแอป LINE", "error");
+        console.error(err);
+      }
+    }
+
+    async function loadCategories() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getExpenseCategories`, { redirect: "follow" });
+        const data = await res.json();
+        categories = data.categories || {};
+        limits = data.limits || {};
+        const sel = document.getElementById('f-category');
+        sel.innerHTML = Object.keys(categories).map(k => `<option value="${k}">${CATEGORY_ICONS[k] || ''} ${_esc(categories[k])}</option>`).join('');
+        updateLimitNote();
+      } catch (err) { console.error(err); }
+    }
+
+    function updateLimitNote() {
+      const cat = document.getElementById('f-category').value;
+      const note = document.getElementById('limit-note');
+      if (limits[cat] !== undefined) {
+        note.textContent = `💡 คำขอที่มียอดไม่เกิน ${Number(limits[cat]).toLocaleString('th-TH')} บาท จะได้รับการอนุมัติอัตโนมัติทันที — หากเกินวงเงินนี้ ระบบจะส่งให้ฝ่ายบัญชี/ผู้บริหารพิจารณาต่อไป`;
+        note.classList.add('show');
+      } else { note.classList.remove('show'); }
+    }
+    document.getElementById('f-category').addEventListener('change', updateLimitNote);
+
+    async function loadExpenses() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getMyExpenses&lineUserId=${encodeURIComponent(lineUserId)}`, { redirect: "follow" });
+        const data = await res.json();
+        myExpenses = data.expenses || [];
+        renderStats();
+        render();
+      } catch (err) {
+        console.error(err);
+        document.getElementById("empty-state").style.display = "block";
+      }
+    }
+
+    function renderStats() {
+      document.getElementById('stat-total').textContent = myExpenses.length;
+      document.getElementById('stat-pending').textContent = myExpenses.filter(x => x.status === 'pending').length;
+      const approvedSum = myExpenses.filter(x => x.status === 'approved' || x.status === 'paid').reduce((s, x) => s + x.amount, 0);
+      document.getElementById('stat-amount').textContent = fmtMoney(approvedSum);
+    }
+
+    function render() {
+      const list = document.getElementById("exp-list");
+      const empty = document.getElementById("empty-state");
+      const filtered = currentFilter === "all" ? myExpenses : myExpenses.filter(x => x.status === currentFilter);
+      if (!filtered.length) { list.style.display = "none"; empty.style.display = "block"; return; }
+      empty.style.display = "none";
+      list.style.display = "flex";
+      list.innerHTML = filtered.map((x, i) => `
+        <div class="exp-card st-${x.status}" style="animation-delay:${i * 40}ms">
+          <div class="exp-icon">${CATEGORY_ICONS[x.category] || '🧾'}</div>
+          <div class="exp-body">
+            <div class="exp-top">
+              <div class="exp-cat">${_esc(x.categoryLabel || x.category)}</div>
+              <div class="exp-amount">${fmtMoney(x.amount)} ฿</div>
+            </div>
+            <div class="exp-desc">${_esc(x.description || 'ไม่มีรายละเอียดเพิ่มเติม')}</div>
+            <div class="exp-meta">
+              <span class="pill st-${x.status}">${STATUS_LABELS[x.status] || x.status}</span>
+              <span class="pill date">📅 ${_esc(x.expenseDate)}</span>
+              ${x.receiptUrl ? `<a class="pill date" href="${x.receiptUrl}" target="_blank" style="text-decoration:none;">🧷 ดูใบเสร็จ</a>` : ''}
+            </div>
+            ${x.decisionNote ? `<div class="exp-note">${_esc(x.decisionNote)}</div>` : ''}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    document.getElementById("filter-row").addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter-chip");
+      if (!btn) return;
+      document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+      btn.classList.add("active");
+      currentFilter = btn.dataset.filter;
+      render();
+    });
+
+    function _readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.getElementById('submit-btn').addEventListener('click', async () => {
+      const category = document.getElementById('f-category').value;
+      const amount = parseFloat(document.getElementById('f-amount').value);
+      const expenseDate = document.getElementById('f-date').value;
+      const description = document.getElementById('f-desc').value.trim();
+      const fileInput = document.getElementById('f-receipt');
+      const btn = document.getElementById('submit-btn');
+
+      if (!category || !amount || amount <= 0) { setStatus('⚠️ กรุณาเลือกประเภทและกรอกจำนวนเงินให้ถูกต้อง', 'error'); return; }
+
+      btn.disabled = true; btn.textContent = '⏳ กำลังส่งคำขอ...';
+      setStatus('');
+      try {
+        let receiptImage = '';
+        if (fileInput.files && fileInput.files[0]) {
+          receiptImage = await _readFileAsDataUrl(fileInput.files[0]);
+        }
+        const payload = {
+          type: 'expense',
+          lineUserId, employeeName, category, amount, expenseDate,
+          description, receiptImage,
+          timestamp: new Date().toISOString(),
+        };
+        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (data.ok) {
+          const approved = data.status === 'approved';
+          setStatus(`${approved ? '✅' : '⏳'} ส่งคำขอเรียบร้อย — ${data.note || (approved ? 'อนุมัติอัตโนมัติแล้ว' : 'รอฝ่ายบัญชี/ผู้บริหารพิจารณา')}`, approved ? 'success' : '');
+          document.getElementById('f-amount').value = '';
+          document.getElementById('f-desc').value = '';
+          fileInput.value = '';
+          await loadExpenses();
+        } else {
+          setStatus('⚠️ ส่งคำขอไม่สำเร็จ: ' + (data.error || 'ไม่ทราบสาเหตุ'), 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus('⚠️ เกิดข้อผิดพลาดในการส่งคำขอ ลองอีกครั้ง', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = '📨 ส่งคำขอเบิกค่าใช้จ่าย';
+      }
+    });
+
+    initLiff();
+  </script>
+  <script src="shared/nav.js"></script>
+</body>
+</html>

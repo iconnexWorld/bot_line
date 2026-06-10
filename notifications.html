@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="format-detection" content="telephone=no">
+  <title>การแจ้งเตือน</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared/nav.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #EEF3FB;
+      --card-bg: #FFFFFF;
+      --navy: #1E3A8A;
+      --navy-deep: #14245C;
+      --navy-mid: #2563EB;
+      --navy-soft: #3B82F6;
+      --gold: #C8932B;
+      --gold-lt: #EFD8A4;
+      --gold-glow: #F4E4BC;
+      --gold-dim: rgba(200, 147, 43, 0.10);
+      --text: #1E2A45;
+      --text-muted: #6B7892;
+      --border: #E1E9F7;
+      --success: #10B981;
+      --danger: #EF4444;
+      --info: #2563EB;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background:
+        radial-gradient(900px 360px at 50% -120px, rgba(37, 99, 235, .10), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh; min-height: 100dvh;
+      display: flex; flex-direction: column; align-items: center;
+      padding-bottom: calc(94px + env(safe-area-inset-bottom, 20px));
+    }
+    .page { width: 100%; max-width: 480px; padding: 0 16px; }
+
+    /* ---------- Premium hero header ---------- */
+    .hero {
+      position: relative;
+      margin: 0 -16px 22px;
+      padding: 30px 24px 26px;
+      background: linear-gradient(155deg, var(--navy-deep) 0%, var(--navy) 52%, var(--navy-mid) 100%);
+      border-radius: 0 0 28px 28px;
+      overflow: hidden;
+      box-shadow: 0 14px 36px -12px rgba(20, 36, 92, .45);
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(220px 220px at 88% -10%, rgba(244, 228, 188, .22), transparent 65%),
+        radial-gradient(260px 200px at -10% 115%, rgba(59, 130, 246, .35), transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold-lt) 35%, var(--gold) 50%, var(--gold-lt) 65%, transparent);
+      opacity: .8;
+    }
+    .hero-eyebrow {
+      position: relative; z-index: 1;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold-lt);
+      background: rgba(244, 228, 188, .12);
+      border: 1px solid rgba(244, 228, 188, .28);
+      padding: 5px 12px; border-radius: 100px;
+      margin-bottom: 14px;
+    }
+    .hero-eyebrow .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold-lt);
+      box-shadow: 0 0 0 0 rgba(244,228,188,.6);
+      animation: pulse 2.2s ease-out infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(244,228,188,.55); }
+      70% { box-shadow: 0 0 0 7px rgba(244,228,188,0); }
+      100% { box-shadow: 0 0 0 0 rgba(244,228,188,0); }
+    }
+    .hero h1 {
+      position: relative; z-index: 1;
+      font-family: 'Prompt', sans-serif;
+      font-size: 25px; font-weight: 700; color: #fff;
+      letter-spacing: .01em;
+    }
+    .hero p {
+      position: relative; z-index: 1;
+      font-size: 13px; color: rgba(255,255,255,.72);
+      margin-top: 7px; line-height: 1.6; max-width: 34ch;
+    }
+    .hero-stats {
+      position: relative; z-index: 1;
+      display: flex; gap: 10px; margin-top: 20px;
+    }
+    .hero-stat {
+      flex: 1;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(6px);
+      border-radius: 14px; padding: 10px 12px;
+      text-align: center;
+    }
+    .hero-stat .num { font-family: 'Prompt', sans-serif; font-size: 18px; font-weight: 700; color: #fff; }
+    .hero-stat .lbl { font-size: 10.5px; color: rgba(255,255,255,.65); margin-top: 2px; }
+    .hero-stat.accent { background: linear-gradient(135deg, rgba(244,228,188,.22), rgba(244,228,188,.08)); border-color: rgba(244,228,188,.35); }
+    .hero-stat.accent .num { color: var(--gold-lt); }
+
+    /* ---------- Filters ---------- */
+    .filter-row { display: flex; gap: 8px; margin-bottom: 18px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex: none; padding: 8px 17px; border-radius: 100px; font-size: 12.5px; font-weight: 500;
+      border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted);
+      cursor: pointer; transition: all .18s cubic-bezier(.4,0,.2,1); white-space: nowrap;
+      box-shadow: 0 1px 2px rgba(20,36,92,.04);
+    }
+    .filter-chip:hover { border-color: var(--navy-soft); color: var(--navy); transform: translateY(-1px); }
+    .filter-chip.active {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+      color: #fff; border-color: var(--navy);
+      box-shadow: 0 6px 16px -6px rgba(37, 99, 235, .55);
+      transform: translateY(-1px);
+    }
+
+    /* ---------- Empty state ---------- */
+    .empty-state {
+      text-align: center; padding: 56px 28px;
+      background: var(--card-bg); border-radius: 20px;
+      border: 1px dashed var(--border);
+    }
+    .empty-state .icon {
+      font-size: 34px; margin: 0 auto 14px; width: 64px; height: 64px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--gold-dim), rgba(37,99,235,.06));
+      border-radius: 50%;
+    }
+    .empty-state .title { font-family: 'Prompt', sans-serif; font-weight: 600; font-size: 15px; color: var(--navy); margin-bottom: 5px; }
+    .empty-state .sub { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ---------- Notification cards ---------- */
+    .notif-list { display: flex; flex-direction: column; gap: 12px; }
+    .notif-card {
+      position: relative;
+      background: var(--card-bg);
+      border-radius: 16px; padding: 15px 17px 15px 16px;
+      display: flex; gap: 13px; align-items: flex-start;
+      box-shadow: 0 4px 18px -8px rgba(20, 36, 92, .14);
+      border: 1px solid var(--border);
+      animation: fadeIn .4s cubic-bezier(.22,1,.36,1) both;
+      transition: transform .2s ease, box-shadow .2s ease;
+      overflow: hidden;
+    }
+    .notif-card:active { transform: scale(.985); }
+    .notif-card::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--border);
+    }
+    .notif-card.type-leave_approved::before { background: linear-gradient(180deg, var(--success), #34D399); }
+    .notif-card.type-leave_rejected::before { background: linear-gradient(180deg, var(--danger), #F87171); }
+    .notif-card.type-warning::before { background: linear-gradient(180deg, var(--gold), var(--gold-lt)); }
+    .notif-card.type-quota_warning::before { background: linear-gradient(180deg, var(--info), var(--navy-soft)); }
+
+    .notif-icon {
+      font-size: 21px; line-height: 1; flex: none;
+      width: 42px; height: 42px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(145deg, var(--gold-dim), rgba(37,99,235,.05));
+      border: 1px solid rgba(200, 147, 43, .15);
+    }
+    .notif-card.type-leave_approved .notif-icon { background: linear-gradient(145deg, rgba(16,185,129,.14), rgba(16,185,129,.05)); border-color: rgba(16,185,129,.18); }
+    .notif-card.type-leave_rejected .notif-icon { background: linear-gradient(145deg, rgba(239,68,68,.13), rgba(239,68,68,.05)); border-color: rgba(239,68,68,.16); }
+    .notif-card.type-warning .notif-icon { background: linear-gradient(145deg, rgba(200,147,43,.18), rgba(200,147,43,.06)); border-color: rgba(200,147,43,.22); }
+    .notif-card.type-quota_warning .notif-icon { background: linear-gradient(145deg, rgba(37,99,235,.15), rgba(37,99,235,.05)); border-color: rgba(37,99,235,.18); }
+
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-title { font-family: 'Prompt', sans-serif; font-weight: 600; font-size: 14.5px; color: var(--text); line-height: 1.45; letter-spacing: .005em; }
+    .notif-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.6; }
+    .notif-time {
+      font-size: 10.5px; color: var(--text-muted); margin-top: 9px;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 100px; background: var(--bg);
+      letter-spacing: .02em;
+    }
+    .notif-time::before { content: '🕒'; font-size: 10px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .status-box {
+      margin: 0 0 16px; padding: 13px 16px; border-radius: 13px; font-size: 13px; font-weight: 500;
+      background: var(--gold-dim); color: var(--gold); display: none;
+      border: 1px solid rgba(200,147,43,.2);
+    }
+    .status-box.show { display: block; animation: fadeIn .3s ease both; }
+    .status-box.error { background: rgba(239,68,68,.07); color: var(--danger); border-color: rgba(239,68,68,.18); }
+
+    .skeleton { display: flex; flex-direction: column; gap: 12px; }
+    .skel-card {
+      height: 84px; border-radius: 16px; border: 1px solid var(--border);
+      background: linear-gradient(90deg, #E7EEF9 25%, #F6F9FE 37%, #E7EEF9 63%);
+      background-size: 400% 100%; animation: shimmer 1.5s ease infinite;
+    }
+    @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+    .section-label {
+      font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text-muted); margin: 4px 2px 11px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="brand-bar">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linecap="round">
+            <path d="M48 16a18 18 0 1 0 0 32"/>
+            <path d="M42 23a10 10 0 1 0 0 18"/>
+            <path d="M37 27a5 5 0 1 0 0 10"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-name">ICONNEX WORLD</span>
+          <span class="brand-tagline">Navigating Global Success</span>
+        </span>
+      </div>
+      <span class="hero-eyebrow"><span class="dot"></span> ศูนย์การแจ้งเตือน</span>
+      <h1>🔔 การแจ้งเตือนของฉัน</h1>
+      <p>ผลการอนุมัติ/ปฏิเสธคำขอลา ใบเตือน และการแจ้งเตือนวันลาใกล้หมดโควตา รวบรวมไว้ที่เดียว อัปเดตแบบเรียลไทม์</p>
+      <div class="hero-stats" id="hero-stats">
+        <div class="hero-stat"><div class="num" id="stat-total">–</div><div class="lbl">ทั้งหมด</div></div>
+        <div class="hero-stat accent"><div class="num" id="stat-pending">–</div><div class="lbl">ต้องติดตาม</div></div>
+        <div class="hero-stat"><div class="num" id="stat-week">–</div><div class="lbl">7 วันล่าสุด</div></div>
+      </div>
+    </header>
+
+    <div class="status-box" id="status-box"></div>
+
+    <div class="filter-row" id="filter-row">
+      <button class="filter-chip active" data-filter="all">ทั้งหมด</button>
+      <button class="filter-chip" data-filter="leave_approved">อนุมัติคำขอลา</button>
+      <button class="filter-chip" data-filter="leave_rejected">ปฏิเสธคำขอลา</button>
+      <button class="filter-chip" data-filter="warning">ใบเตือน</button>
+      <button class="filter-chip" data-filter="quota_warning">โควตาใกล้หมด</button>
+    </div>
+
+    <div class="section-label">รายการล่าสุด</div>
+
+    <div id="skeleton" class="skeleton">
+      <div class="skel-card"></div>
+      <div class="skel-card"></div>
+      <div class="skel-card"></div>
+    </div>
+
+    <div id="notif-list" class="notif-list" style="display:none;"></div>
+
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div class="icon">📭</div>
+      <div class="title">ยังไม่มีการแจ้งเตือน</div>
+      <div class="sub">เมื่อมีผลการอนุมัติคำขอลา ใบเตือน หรือการแจ้งเตือนใหม่ จะปรากฏที่นี่ทันที</div>
+    </div>
+  </div>
+
+  <div id="bottom-nav"></div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwQv85mi_GvvBbIG-bZ0ah7BYMaMb7tBLPDOrlKxd8fF9dlu3RWL7PjMnJLxjEuyJ2ibA/exec";
+    const LIFF_ID = "2010074074-oOwr1JIe";
+
+    let lineUserId = "";
+    let allNotifications = [];
+    let currentFilter = "all";
+
+    const TYPE_LABELS = {
+      leave_approved: "อนุมัติคำขอลา",
+      leave_rejected: "ปฏิเสธคำขอลา",
+      warning: "ใบเตือน",
+      quota_warning: "โควตาใกล้หมด",
+    };
+
+    function setStatus(msg, type) {
+      const box = document.getElementById("status-box");
+      if (!msg) { box.classList.remove("show", "error"); return; }
+      box.textContent = msg;
+      box.className = "status-box show" + (type === "error" ? " error" : "");
+    }
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+        const profile = await liff.getProfile();
+        lineUserId = profile.userId;
+        await loadNotifications();
+      } catch (err) {
+        setStatus("❌ ไม่สามารถเชื่อมต่อ LINE ได้ กรุณาเปิดผ่านแอป LINE", "error");
+        console.error(err);
+      }
+    }
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getNotifications&lineUserId=${encodeURIComponent(lineUserId)}`, { redirect: "follow" });
+        const data = await res.json();
+        allNotifications = data.notifications || [];
+        renderStats();
+        render();
+      } catch (err) {
+        console.error(err);
+        setStatus("⚠️ โหลดการแจ้งเตือนไม่สำเร็จ ลองรีเฟรชอีกครั้ง", "error");
+        document.getElementById("skeleton").style.display = "none";
+        document.getElementById("empty-state").style.display = "block";
+      }
+    }
+
+    function renderStats() {
+      const total = allNotifications.length;
+      const pending = allNotifications.filter(n => n.type === 'leave_rejected' || n.type === 'warning' || n.type === 'quota_warning').length;
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const recent = allNotifications.filter(n => {
+        const t = Date.parse((n.date || '').replace(' ', 'T'));
+        return !isNaN(t) && t >= weekAgo;
+      }).length;
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-pending').textContent = pending;
+      document.getElementById('stat-week').textContent = recent;
+    }
+
+    function render() {
+      document.getElementById("skeleton").style.display = "none";
+      const list = document.getElementById("notif-list");
+      const empty = document.getElementById("empty-state");
+
+      const filtered = currentFilter === "all"
+        ? allNotifications
+        : allNotifications.filter(n => n.type === currentFilter);
+
+      if (!filtered.length) {
+        list.style.display = "none";
+        empty.style.display = "block";
+        return;
+      }
+
+      empty.style.display = "none";
+      list.style.display = "flex";
+      list.innerHTML = filtered.map((n, i) => `
+        <div class="notif-card type-${n.type}" style="animation-delay:${i * 40}ms">
+          <div class="notif-icon">${n.icon || "🔔"}</div>
+          <div class="notif-body">
+            <div class="notif-title">${_esc(n.title)}</div>
+            <div class="notif-detail">${_esc(n.detail)}</div>
+            <div class="notif-time">${_esc(n.date)} · ${TYPE_LABELS[n.type] || ""}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function _esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    document.getElementById("filter-row").addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter-chip");
+      if (!btn) return;
+      document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+      btn.classList.add("active");
+      currentFilter = btn.dataset.filter;
+      render();
+    });
+
+    initLiff();
+  </script>
+  <script src="shared/nav.js"></script>
+</body>
+</html>

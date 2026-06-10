@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="format-detection" content="telephone=no">
+  <title>เบิกค่าใช้จ่าย</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #EEF2FA;
+      --card-bg: #FFFFFF;
+      --navy: #0A1628;
+      --navy-mid: #0E1F45;
+      --navy-soft: #1E3A8A;
+      --gold: #D97706;
+      --gold-lt: #F59E0B;
+      --gold-dim: rgba(217, 119, 6, 0.10);
+      --white: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --muted: #64748B;
+      --border: #E2E8F0;
+      --success: #10B981;
+      --danger: #EF4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh; min-height: 100dvh;
+      display: flex; flex-direction: column; align-items: center;
+      overflow-x: hidden;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
+    }
+
+    /* ── Loading ── */
+    #loading-screen {
+      position: fixed; inset: 0; background: var(--navy);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 20px; z-index: 200; transition: opacity 0.5s ease;
+    }
+    #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+    .load-logo { font-family: 'Prompt', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; }
+    .load-ring { width: 44px; height: 44px; border: 2px solid var(--gold-dim); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .load-text { font-size: 13px; color: var(--muted); }
+
+    /* ── Header ── */
+    .header {
+      width: 100%;
+      background: linear-gradient(150deg, #071121 0%, #0E1F45 45%, #1a337a 100%);
+      padding: 16px 18px 22px;
+      padding-top: max(16px, env(safe-area-inset-top, 16px));
+      display: flex; align-items: center; gap: 12px;
+      position: sticky; top: 0; z-index: 50; overflow: hidden;
+    }
+    .header::before {
+      content: ''; position: absolute;
+      width: 280px; height: 280px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 65%);
+      top: -120px; right: -60px; pointer-events: none;
+    }
+    .header::after {
+      content: ''; position: absolute;
+      width: 160px; height: 160px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(200,147,43,0.14) 0%, transparent 70%);
+      bottom: -70px; left: 25%; pointer-events: none;
+    }
+
+    .header-bell {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top, 12px));
+      right: 14px;
+      background: none; border: none; cursor: pointer;
+      color: var(--gold-lt); padding: 6px; z-index: 2; line-height: 0;
+    }
+
+    .header-avatar {
+      width: 50px; height: 50px; border-radius: 50%;
+      background: var(--gold-dim); border: 2px solid var(--gold-lt);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: var(--gold);
+      overflow: hidden; flex-shrink: 0; position: relative; z-index: 1;
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.2);
+    }
+    .header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .header-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+    .header-name { font-family: 'Prompt', sans-serif; font-size: 15px; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-dept { font-size: 12px; color: var(--gold-lt); font-weight: 500; margin-top: 2px; }
+    .header-sub  { font-size: 10.5px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    .header-clock {
+      background: white; border-radius: 14px; padding: 10px 13px;
+      display: flex; align-items: center; gap: 9px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+      flex-shrink: 0; position: relative; z-index: 1; margin-right: 30px;
+    }
+    .clock-icon-wrap {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(217,119,6,0.10); border: 1.5px solid var(--gold);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .clock-text { display: flex; flex-direction: column; }
+    .clock-time { font-family: 'Prompt', sans-serif; font-size: 19px; font-weight: 700; color: var(--gold); line-height: 1; }
+    .clock-day  { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+    /* ── Main ── */
+    .main { width: 100%; max-width: 480px; padding: 20px 16px; }
+
+    /* ── Section Label ── */
+    .section-label {
+      font-family: 'Prompt', sans-serif;
+      font-size: 11px; font-weight: 600; color: var(--gold);
+      text-transform: uppercase; letter-spacing: 0.12em;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .label-deco { display: flex; align-items: center; gap: 3px; }
+    .label-deco .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); opacity: 0.7; }
+    .label-deco .line-seg { width: 16px; height: 1.5px; background: linear-gradient(90deg, var(--gold) 0%, transparent 100%); }
+    .label-deco.right .line-seg { background: linear-gradient(270deg, var(--gold) 0%, transparent 100%); }
+    .label-text { flex: 0 0 auto; }
+
+    /* ── Form Card ── */
+    .form-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    /* ── Amount Hero ── */
+    .amount-hero {
+      background: linear-gradient(150deg, #071121 0%, #0E1F45 50%, #1a337a 100%);
+      border-radius: 18px;
+      padding: 22px 20px;
+      margin-bottom: 16px;
+      position: relative; overflow: hidden;
+      box-shadow: 0 8px 24px rgba(10,22,40,0.2);
+    }
+    .amount-hero::before {
+      content: ''; position: absolute;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 65%);
+      top: -80px; right: -40px; pointer-events: none;
+    }
+    .amount-label { font-size: 11px; color: rgba(244,228,188,0.65); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+    .amount-input-wrap {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(244,228,188,0.25);
+      border-radius: 12px; padding: 12px 16px;
+    }
+    .amount-symbol { font-family: 'Prompt', sans-serif; font-size: 22px; font-weight: 700; color: var(--gold-lt); }
+    .amount-input {
+      flex: 1; background: none; border: none; outline: none;
+      font-family: 'Prompt', sans-serif; font-size: 28px; font-weight: 700;
+      color: white; width: 100%;
+      color-scheme: dark;
+    }
+    .amount-input::placeholder { color: rgba(255,255,255,0.25); font-size: 22px; }
+    .amount-hint { font-size: 10.5px; color: rgba(244,228,188,0.45); margin-top: 8px; }
+
+    /* ── Field Group ── */
+    .field-group { display: flex; flex-direction: column; gap: 12px; }
+
+    .field-row { display: flex; gap: 10px; }
+    .field-row .field-item { flex: 1; }
+
+    .field-item { display: flex; flex-direction: column; gap: 6px; }
+
+    .field-label {
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+
+    .field-input, .field-select, .field-textarea {
+      width: 100%; padding: 13px 14px;
+      background: #F8FAFD;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px; font-family: 'Sarabun', sans-serif;
+      color: var(--text); color-scheme: light;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field-input:focus, .field-select:focus, .field-textarea:focus {
+      border-color: var(--gold);
+      background: #FFFDF7;
+      box-shadow: 0 0 0 3px rgba(217,119,6,0.08);
+    }
+    .field-select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+    .field-select-wrap { position: relative; }
+    .field-select-wrap::after {
+      content: '';
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--text-muted);
+      pointer-events: none;
+    }
+    .field-textarea { resize: none; height: 88px; line-height: 1.6; }
+
+    /* Category chips */
+    .category-chips {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .category-chip {
+      padding: 7px 14px;
+      background: #F1F5FD;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s;
+      font-family: 'Sarabun', sans-serif;
+    }
+    .category-chip.active {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .category-chip:active { transform: scale(0.96); }
+
+    /* Custom category input (shown when อื่นๆ selected) */
+    #custom-category-wrap { display: none; }
+
+    /* ── Camera Section ── */
+    .camera-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .camera-section-header {
+      padding: 16px 20px 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .camera-section-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .camera-section-title { font-family: 'Prompt', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
+    .camera-section-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .camera-wrap {
+      position: relative; width: 100%; aspect-ratio: 4/3;
+      background: #DBEAFE; overflow: hidden;
+    }
+    #video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; }
+    #canvas { display: none; }
+
+    .cam-guide { position: absolute; inset: 14px; pointer-events: none; }
+    .cam-guide::before, .cam-guide::after, .cam-guide span::before, .cam-guide span::after {
+      content: ''; position: absolute; width: 24px; height: 24px;
+      border-color: var(--gold); border-style: solid; opacity: 0.85;
+    }
+    .cam-guide::before      { top: 0; left: 0;   border-width: 2.5px 0 0 2.5px; border-radius: 4px 0 0 0; }
+    .cam-guide::after       { top: 0; right: 0;  border-width: 2.5px 2.5px 0 0; border-radius: 0 4px 0 0; }
+    .cam-guide span::before { bottom: 0; left: 0;  border-width: 0 0 2.5px 2.5px; border-radius: 0 0 0 4px; }
+    .cam-guide span::after  { bottom: 0; right: 0; border-width: 0 2.5px 2.5px 0; border-radius: 0 0 4px 0; }
+
+    .camera-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
+      background: rgba(219,234,254,0.88); backdrop-filter: blur(4px);
+      transition: opacity 0.3s;
+    }
+    .camera-overlay.hidden { opacity: 0; pointer-events: none; }
+    .overlay-icon-wrap {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--gold-dim); border: 1px solid var(--gold);
+      display: flex; align-items: center; justify-content: center; font-size: 28px;
+    }
+    .overlay-text { font-size: 13px; color: var(--muted); }
+
+    #preview-wrap { display: none; position: relative; }
+    #preview { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+    .preview-badge {
+      position: absolute; top: 12px; left: 12px;
+      background: rgba(10,22,40,0.75); color: var(--gold-lt);
+      font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 20px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .retake-btn {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(10,22,40,0.75); color: var(--white);
+      font-size: 12px; font-family: 'Sarabun', sans-serif;
+      padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); cursor: pointer;
+    }
+    .flash-overlay { position: absolute; inset: 0; background: white; opacity: 0; pointer-events: none; transition: opacity 0.05s; }
+    .flash-overlay.flash { opacity: 0.7; }
+
+    /* Shutter outside */
+    .camera-action {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 10px; padding: 14px 0 4px;
+    }
+    .shutter-btn {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-lt) 0%, var(--gold) 100%);
+      border: none; cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 7px rgba(217,119,6,0.14), 0 4px 20px rgba(217,119,6,0.32);
+      position: relative;
+    }
+    .shutter-btn::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); }
+    .shutter-btn svg { width: 24px; height: 24px; fill: var(--navy); }
+    .shutter-btn:active { transform: scale(0.92); }
+    .shutter-btn:disabled { background: #CBD5E1; box-shadow: none; cursor: default; }
+    .camera-instruction { font-size: 12px; color: var(--text-muted); text-align: center; }
+
+    /* ── Bill Preview (after capture, replacing camera) ── */
+    .bill-preview-wrap {
+      display: none;
+      padding: 14px 20px;
+    }
+    .bill-preview-img {
+      width: 100%; border-radius: 14px;
+      border: 2px solid var(--gold);
+      object-fit: contain; max-height: 240px;
+      display: block;
+    }
+    .bill-preview-actions {
+      display: flex; gap: 10px; margin-top: 10px;
+    }
+    .bill-retake-btn {
+      flex: 1; padding: 11px;
+      background: #F1F5FD; border: 1.5px solid var(--border);
+      border-radius: 12px; cursor: pointer;
+      font-family: 'Sarabun', sans-serif; font-size: 13px; color: var(--text);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .bill-retake-btn:active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+    /* ── Submit ── */
+    .submit-btn {
+      width: 100%; padding: 17px;
+      background: linear-gradient(135deg, #0A1628 0%, #1E3A8A 100%);
+      color: var(--white); font-size: 15px; font-weight: 600;
+      font-family: 'Prompt', sans-serif;
+      border: none; border-radius: 14px; cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 20px rgba(10,22,40,0.14);
+      margin-bottom: 10px;
+    }
+    .submit-btn:not(:disabled):active { transform: scale(0.99); }
+    .submit-btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* ── Status Box ── */
+    .status-box {
+      display: none; margin-top: 14px; padding: 14px 16px;
+      border-radius: 12px; font-size: 14px; font-weight: 500;
+      text-align: center; line-height: 1.5; white-space: pre-line;
+    }
+    .status-box.success { display: block; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #16a34a; }
+    .status-box.error   { display: block; background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: #dc2626; }
+    .status-box.loading { display: block; background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.2); color: #2563eb; }
+
+    /* ── Fade-in ── */
+    .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.4s ease forwards; }
+    .fade-in:nth-child(1) { animation-delay: 0.05s; }
+    .fade-in:nth-child(2) { animation-delay: 0.10s; }
+    .fade-in:nth-child(3) { animation-delay: 0.15s; }
+    .fade-in:nth-child(4) { animation-delay: 0.20s; }
+    .fade-in:nth-child(5) { animation-delay: 0.25s; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── Bottom Nav (7 items) ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      background:
+        radial-gradient(180px 90px at 14% 0%, rgba(244,228,188,.14), transparent 70%),
+        linear-gradient(135deg, #14245C 0%, #1E3A8A 55%, #2563EB 100%);
+      border-top: 1px solid rgba(244,228,188,.22);
+      display: flex; flex-direction: column;
+      z-index: 100;
+      box-shadow: 0 -10px 28px -8px rgba(20,36,92,.45);
+      overflow: hidden;
+    }
+    .bottom-nav::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #F4E4BC 35%, #C8932B 50%, #F4E4BC 65%, transparent);
+      opacity: .75;
+    }
+    .bottom-nav-brand {
+      display: flex; align-items: center; justify-content: center;
+      gap: 5px; padding: 5px 0 3px; position: relative; z-index: 1;
+    }
+    .bottom-nav-brand-svg { width: 11px; height: 11px; color: #F4E4BC; opacity: .88; flex-shrink: 0; }
+    .bottom-nav-brand-text {
+      font-family: 'Prompt', sans-serif; font-size: 7.5px;
+      letter-spacing: 0.24em; color: #F4E4BC; font-weight: 500; opacity: .82;
+      text-transform: uppercase;
+    }
+    .bottom-nav-row {
+      display: flex; justify-content: space-around; width: 100%;
+      padding: 5px 0 calc(6px + env(safe-area-inset-bottom, 12px));
+    }
+    .bottom-nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      text-decoration: none; color: rgba(244,228,188,.55);
+      gap: 2px; flex: 1;
+      transition: all 0.2s ease; position: relative; z-index: 1;
+    }
+    .bottom-nav-item:active { background: rgba(244,228,188,.08); }
+    .bottom-nav-item.active { color: #F4E4BC; text-shadow: 0 0 14px rgba(244,228,188,.4); }
+    .bottom-nav-item.active .bottom-nav-label { color: #F4E4BC; font-weight: 600; }
+    .bottom-nav-icon-wrap {
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; transition: background 0.2s;
+    }
+    .bottom-nav-item.active .bottom-nav-icon-wrap { background: rgba(244,228,188,0.16); }
+    .bottom-nav-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+    .bottom-nav-label { font-family: 'Prompt', sans-serif; font-size: 8.5px; color: rgba(244,228,188,.55); }
+    .bottom-nav-item.active .bottom-nav-icon svg { filter: drop-shadow(0 0 5px rgba(244,228,188,.5)); }
+  </style>
+</head>
+
+<body>
+
+  <!-- Loading -->
+  <div id="loading-screen">
+    <div class="load-logo">ICONNEX WORLD</div>
+    <div class="load-ring"></div>
+    <div class="load-text">กำลังตรวจสอบตัวตน...</div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-avatar">
+      <img id="profile-pic" src="" alt="" onerror="this.style.display='none'">
+      <span id="profile-initial"></span>
+    </div>
+    <div class="header-info">
+      <div class="header-name" id="profile-name">กำลังโหลด...</div>
+      <div class="header-dept">Human Resources</div>
+      <div class="header-sub">เบิกค่าใช้จ่าย</div>
+    </div>
+    <div class="header-clock">
+      <div class="clock-icon-wrap">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+        </svg>
+      </div>
+      <div class="clock-text">
+        <div class="clock-time" id="clock-time">--:--</div>
+        <div class="clock-day"  id="clock-day">---</div>
+      </div>
+    </div>
+    <button class="header-bell" aria-label="การแจ้งเตือน">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span style="position:absolute;top:5px;right:5px;width:7px;height:7px;background:#F59E0B;border-radius:50%;border:1.5px solid #0E1F45;"></span>
+    </button>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- จำนวนเงิน (hero input) -->
+    <div class="amount-hero fade-in">
+      <div class="amount-label">จำนวนเงินที่ขอเบิก</div>
+      <div class="amount-input-wrap">
+        <span class="amount-symbol">฿</span>
+        <input class="amount-input" id="amount" type="number" inputmode="decimal" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="amount-hint">กรอกยอดเงินที่สำรองจ่ายไปจริง</div>
+    </div>
+
+    <!-- ประเภทค่าใช้จ่าย -->
+    <div class="section-label fade-in">
+      <span class="label-deco"><span class="dot"></span><span class="dot"></span><span class="line-seg"></span></span>
+      <span class="label-text">ประเภทค่าใช้จ่าย</span>
+      <span class="label-deco right"><span class="line-seg"></span><span class="dot"></span><span class="dot"></span></span>
+    </div>
+
+    <div class="form-card fade-in">
+      <div class="category-chips" id="category-chips">
+        <button class="category-chip active" data-value="ค่าเดินทาง" onclick="selectCategory(this)">🚗 ค่าเดินทาง</button>
+        <button class="category-chip" data-value="ค่าอาหาร" onclick="selectCategory(this)">🍽️ ค่าอาหาร</button>
+        <button class="category-chip" data-value="ค่าวัสดุ/อุปกรณ์" onclick="selectCategory(this)">📦 ค่าวัสดุ/อุปกรณ์</button>
+        <button class="category-chip" data-value="ค่าบริการ" onclick="selectCategory(this)">🔧 ค่าบริการ</button>
+        <button class="category-chip" data-value="ค่าสาธารณูปโภค" onclick="selectCategory(this)">💡 ค่าสาธารณูปโภค</button>
+        <button class="category-chip" data-value="ค่าเลี้ยงรับรอง" onclick="selectCategory(this)">🤝 ค่าเลี้ยงรับรอง</button>
+        <button class="category-chip" data-value="อื่นๆ" onclick="selectCategory(this)">✏️ อื่นๆ</button>
+      </div>
+      <div id="custom-category-wrap" style="margin-top:12px;">
+        <input class="field-input" id="custom-category" type="text" placeholder="ระบุประเภทค่าใช้จ่าย...">
+      </div>
+    </div>
+
+    <!-- รายละเอียด -->
+    <div class="section-label fade-in">
+      <span class="label-deco"><span class="dot"></span><span class="dot"></span><span class="line-seg"></span></span>
+      <span class="label-text">รายละเอียด</span>
+      <span class="label-deco right"><span class="line-seg"></span><span class="dot"></span><span class="dot"></span></span>
+    </div>
+
+    <div class="form-card fade-in">
+      <div class="field-group">
+        <div class="field-row">
+          <div class="field-item">
+            <label class="field-label">วันที่จ่าย</label>
+            <input class="field-input" id="expense-date" type="date">
+          </div>
+          <div class="field-item">
+            <label class="field-label">วันที่ต้องการรับเงิน</label>
+            <input class="field-input" id="need-date" type="date">
+          </div>
+        </div>
+        <div class="field-item">
+          <label class="field-label">รายละเอียดค่าใช้จ่าย</label>
+          <textarea class="field-textarea" id="description" placeholder="อธิบายรายละเอียด เช่น ซื้อวัสดุเพื่อจัดงาน ค่าแท็กซี่ไปลูกค้า..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ถ่ายรูปบิล -->
+    <div class="section-label fade-in">
+      <span class="label-deco"><span class="dot"></span><span class="dot"></span><span class="line-seg"></span></span>
+      <span class="label-text">แนบรูปบิล / ใบเสร็จ</span>
+      <span class="label-deco right"><span class="line-seg"></span><span class="dot"></span><span class="dot"></span></span>
+    </div>
+
+    <div class="camera-section fade-in">
+      <div class="camera-section-header">
+        <div class="camera-section-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
+            <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.5-10h-2.08L16 4H8L6.08 5.5H4a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7.5a2 2 0 0 0-2-2Z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="camera-section-title">ถ่ายรูปบิล / ใบเสร็จ</div>
+          <div class="camera-section-sub">ถ่ายให้ชัดเจน เห็นยอดเงินและรายการครบ</div>
+        </div>
+      </div>
+
+      <div class="camera-wrap">
+        <video id="video" autoplay playsinline muted webkit-playsinline></video>
+        <canvas id="canvas"></canvas>
+        <div class="cam-guide"><span></span></div>
+        <div class="flash-overlay" id="flash-overlay"></div>
+        <div class="camera-overlay" id="cam-overlay">
+          <div class="overlay-icon-wrap">🧾</div>
+          <div class="overlay-text">กำลังเปิดกล้อง...</div>
+        </div>
+        <div id="preview-wrap">
+          <img id="preview" alt="รูปบิล">
+          <div class="preview-badge">บิล / ใบเสร็จ</div>
+          <button class="retake-btn" onclick="retake()">↩ ถ่ายใหม่</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shutter -->
+    <div class="camera-action fade-in">
+      <button class="shutter-btn" id="shutter-btn" onclick="capture()" title="ถ่ายรูปบิล">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.5-10h-2.08L16 4H8L6.08 5.5H4a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7.5a2 2 0 0 0-2-2Z"/>
+        </svg>
+      </button>
+      <div class="camera-instruction">ถ่ายรูปใบเสร็จ / บิลเพื่อแนบหลักฐาน</div>
+    </div>
+
+    <!-- Submit -->
+    <button class="submit-btn fade-in" id="submit-btn" onclick="submitExpense()" disabled>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+      ส่งคำขอเบิกค่าใช้จ่าย
+    </button>
+
+    <div class="status-box" id="status-box"></div>
+
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwQv85mi_GvvBbIG-bZ0ah7BYMaMb7tBLPDOrlKxd8fF9dlu3RWL7PjMnJLxjEuyJ2ibA/exec";
+    const LIFF_ID = "2010074074-oOwr1JIe";
+
+    let lineUserId   = "";
+    let employeeName = "";
+    let capturedImage = null;
+    let stream = null;
+    let selectedCategory = "ค่าเดินทาง";
+
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      const opts = { timeZone: "Asia/Bangkok" };
+      document.getElementById("clock-time").textContent = now.toLocaleTimeString("th-TH", { ...opts, hour: "2-digit", minute: "2-digit" });
+      document.getElementById("clock-day").textContent  = now.toLocaleDateString("th-TH",  { ...opts, weekday: "long" });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Set default date to today
+    (function setDefaultDate() {
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("expense-date").value = today;
+      document.getElementById("need-date").value    = today;
+    })();
+
+    // Category chips
+    function selectCategory(el) {
+      document.querySelectorAll(".category-chip").forEach(c => c.classList.remove("active"));
+      el.classList.add("active");
+      selectedCategory = el.dataset.value;
+      const customWrap = document.getElementById("custom-category-wrap");
+      customWrap.style.display = selectedCategory === "อื่นๆ" ? "block" : "none";
+      if (selectedCategory !== "อื่นๆ") document.getElementById("custom-category").value = "";
+    }
+
+    // LIFF
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+
+        const profile = await liff.getProfile();
+        lineUserId   = profile.userId;
+        employeeName = profile.displayName;
+        document.getElementById("profile-name").textContent = profile.displayName;
+        if (profile.pictureUrl) {
+          const img = document.getElementById("profile-pic");
+          img.src = profile.pictureUrl; img.style.display = "block";
+          document.getElementById("profile-initial").textContent = "";
+        } else {
+          document.getElementById("profile-initial").textContent = profile.displayName.charAt(0);
+        }
+      } catch (err) {
+        lineUserId   = "U_TEST_ID";
+        employeeName = "ทดสอบ";
+        document.getElementById("profile-name").textContent = "ทดสอบ (นอก LINE)";
+        document.getElementById("profile-initial").textContent = "ท";
+      }
+
+      await startCamera();
+      const ls = document.getElementById("loading-screen");
+      ls.classList.add("fade-out");
+      setTimeout(() => ls.style.display = "none", 500);
+    }
+
+    // Camera
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 960 } },
+          audio: false
+        });
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+        video.onloadedmetadata = () => video.play().catch(() => {});
+        document.getElementById("cam-overlay").classList.add("hidden");
+      } catch (err) {
+        const overlay = document.getElementById("cam-overlay");
+        overlay.querySelector(".overlay-icon-wrap").textContent = "⚠️";
+        overlay.querySelector(".overlay-text").textContent = "กรุณาอนุญาตการใช้กล้อง แล้วรีเฟรช";
+        overlay.classList.remove("hidden");
+      }
+    }
+
+    // Capture
+    function capture() {
+      const video  = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      canvas.width  = video.videoWidth  || 1280;
+      canvas.height = video.videoHeight || 960;
+
+      const flash = document.getElementById("flash-overlay");
+      flash.classList.add("flash");
+      setTimeout(() => flash.classList.remove("flash"), 150);
+
+      const ctx = canvas.getContext("2d");
+      // For bill: don't mirror (back camera)
+      ctx.drawImage(video, 0, 0);
+
+      // Timestamp watermark
+      const barH = 44;
+      ctx.fillStyle = "rgba(10,22,40,0.78)";
+      ctx.fillRect(0, canvas.height - barH, canvas.width, barH);
+      ctx.fillStyle = "rgba(201,168,76,0.9)";
+      ctx.font = "bold 13px Sarabun, sans-serif";
+      const now = new Date();
+      const label = `${employeeName}  ·  ${now.toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })}  ·  เบิกค่าใช้จ่าย`;
+      ctx.fillText(label, 12, canvas.height - barH / 2 + 5);
+
+      capturedImage = canvas.toDataURL("image/jpeg", 0.80).split(",")[1];
+
+      document.getElementById("preview").src = canvas.toDataURL("image/jpeg", 0.80);
+      document.getElementById("preview-wrap").style.display = "block";
+      document.getElementById("video").style.display = "none";
+      document.getElementById("shutter-btn").disabled = true;
+      checkReadyToSubmit();
+
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    }
+
+    function retake() {
+      capturedImage = null;
+      document.getElementById("preview-wrap").style.display = "none";
+      document.getElementById("video").style.display = "block";
+      document.getElementById("shutter-btn").disabled = false;
+      document.getElementById("submit-btn").disabled  = true;
+      setStatus("", "");
+      startCamera();
+    }
+
+    function checkReadyToSubmit() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const ready  = capturedImage && amount > 0;
+      document.getElementById("submit-btn").disabled = !ready;
+    }
+
+    document.getElementById("amount").addEventListener("input", checkReadyToSubmit);
+
+    function setStatus(msg, type) {
+      const box = document.getElementById("status-box");
+      box.className = "status-box" + (type ? " " + type : "");
+      box.textContent = msg;
+    }
+
+    // Submit
+    async function submitExpense() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      if (!amount || amount <= 0) { setStatus("⚠️ กรุณากรอกจำนวนเงินก่อนครับ", "error"); return; }
+      if (!capturedImage)          { setStatus("⚠️ กรุณาถ่ายรูปบิลก่อนส่งครับ", "error");   return; }
+
+      const category = selectedCategory === "อื่นๆ"
+        ? (document.getElementById("custom-category").value.trim() || "อื่นๆ")
+        : selectedCategory;
+
+      setStatus("⏳ กำลังส่งคำขอ...", "loading");
+      document.getElementById("submit-btn").disabled = true;
+
+      const payload = JSON.stringify({
+        action:       "expense",
+        lineUserId,
+        employeeName,
+        category,
+        amount,
+        expenseDate:  document.getElementById("expense-date").value,
+        needDate:     document.getElementById("need-date").value,
+        description:  document.getElementById("description").value.trim(),
+        imageBase64:  capturedImage,
+        timestamp:    new Date().toISOString()
+      });
+
+      fetch(GAS_URL, {
+        method: "POST", mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: payload
+      })
+      .then(() => {
+        setStatus(
+          `✅ ส่งคำขอเบิกสำเร็จ!\nประเภท: ${category}\nยอด: ฿${amount.toLocaleString()}\nระบบจะดำเนินการภายใน 1-3 วันทำการ`,
+          "success"
+        );
+        // Reset form
+        document.getElementById("amount").value      = "";
+        document.getElementById("description").value = "";
+        capturedImage = null;
+        retake();
+      })
+      .catch(err => {
+        setStatus("❌ ส่งไม่สำเร็จ: " + err.message, "error");
+        document.getElementById("submit-btn").disabled = false;
+      });
+    }
+
+    initLiff();
+  </script>
+
+  <!-- Bottom Navigation (7 items) -->
+  <div class="bottom-nav">
+    <div class="bottom-nav-brand">
+      <svg class="bottom-nav-brand-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round">
+        <path d="M48 16a18 18 0 1 0 0 32"/><path d="M42 23a10 10 0 1 0 0 18"/><path d="M37 27a5 5 0 1 0 0 10"/>
+      </svg>
+      <span class="bottom-nav-brand-text">ICONNEX WORLD</span>
+    </div>
+    <div class="bottom-nav-row">
+    <a href="index.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-wrap">
+        <div class="bottom-nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+          </svg>
+        </div>
+      </div>
+      <span class="bottom-nav-label">ยืนมีเวลา</span>
+    </a>
+    <a href="history.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-wrap">
+        <div class="bottom-nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <rect x="4" y="3" width="16" height="18" rx="2" fill="rgba(244,228,188,.15)" stroke="rgba(244,228,188,.55)" stroke-width="1.5"/>
+            <line x1="8" y1="9"  x2="16" y2="9"  stroke="rgba(244,228,188,.6)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="8" y1="13" x2="16" y2="13" stroke="rgba(244,228,188,.6)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="8" y1="17" x2="13" y2="17" stroke="rgba(244,228,188,.6)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <span class="bottom-nav-label">ประวัติ</span>
+    </a>
+    <a href="leave_days.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-wrap">
+        <div class="bottom-nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <rect x="3" y="4" width="18" height="18" rx="2" fill="rgba(244,228,188,.15)" stroke="rgba(244,228,188,.55)" stroke-width="1.5"/>
+            <path d="M3 9h18" stroke="rgba(244,228,188,.55)" stroke-width="1.5"/>
+            <path d="M8 2v4M16 2v4" stroke="rgba(244,228,188,.55)" stroke-width="1.5" stroke-linecap="round"/>
+            <text x="12" y="19" fill="rgba(244,228,188,.8)" font-size="6" font-weight="bold" text-anchor="middle" font-family="Prompt,sans-serif">17</text>
+          </svg>
+        </div>
+      </div>
+      <span class="bottom-nav-label">วันลา</span>
+    </a>
+    <a href="bill.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon-wrap">
+        <div class="bottom-nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <rect x="4" y="2" width="12" height="20" rx="2" fill="rgba(244,228,188,.25)" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 18l4-4 3 3 5-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 7h6M8 10h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+            <circle cx="19" cy="19" r="3.5" fill="#F59E0B"/>
+            <path d="M18 19h2M19 18v2" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <span class="bottom-nav-label">เบิกบิล</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-wrap">
+        <div class="bottom-nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <circle cx="12" cy="8" r="4" fill="rgba(244,228,188,.3)" stroke="rgba(244,228,188,.55)" stroke-width="1.5"/>
+            <path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" stroke="rgba(244,228,188,.55)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <span class="bottom-nav-label">โปรไฟล์</span>
+    </a>
+    <a href="team.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-wrap">
+        <div class="bottom-nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <circle cx="9"  cy="7.5" r="3.5" fill="rgba(244,228,188,.25)" stroke="rgba(244,228,188,.55)" stroke-width="1.5"/>
+            <circle cx="16" cy="7"   r="3"   fill="rgba(244,228,188,.15)" stroke="rgba(244,228,188,.4)"  stroke-width="1"/>
+            <path d="M3 20c0-3 2.7-4.5 6-4.5s6 1.5 6 4.5" stroke="rgba(244,228,188,.55)" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M14 17.5c.8-.8 2-1 2-1s2.5.5 2.5 3" stroke="rgba(244,228,188,.4)" stroke-width="1" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <span class="bottom-nav-label">ทีม</span>
+    </a>
+    <a href="warning.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-wrap">
+        <div class="bottom-nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <rect x="3" y="3" width="18" height="3" rx="1" fill="rgba(244,228,188,.3)"/>
+            <rect x="3" y="6" width="18" height="14" fill="rgba(244,228,188,.08)" stroke="rgba(244,228,188,.4)" stroke-width="1"/>
+            <rect x="5"    y="13" width="3" height="6" rx="0.5" fill="#22C55E" opacity="0.8"/>
+            <rect x="10.5" y="15" width="3" height="4" rx="0.5" fill="#EF4444" opacity="0.8"/>
+            <rect x="16"   y="9"  width="3" height="10" rx="0.5" fill="#60A5FA" opacity="0.8"/>
+          </svg>
+        </div>
+      </div>
+      <span class="bottom-nav-label">HR</span>
+    </a>
+    </div><!-- /.bottom-nav-row -->
+  </div>
+
+</body>
+</html>
